@@ -1,50 +1,81 @@
-# Welcome to your Expo app 👋
+# Arkalardayım Anne
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile application built with React Native and Expo for tracking and managing protest attendance and activist engagement.
 
-## Get started
+## Features
 
-1. Install dependencies
+- Home screen with attendance tracking and statistics
+- Leaderboard system for activist engagement
+- News and announcements
+- Achievement system
+- User profiles and settings
+- Dark mode support
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+- React Native
+- Expo
+- TypeScript
+- Firebase (Authentication, Database, Storage)
+- Native Base UI Components
+- Expo Router for Navigation
 
-   ```bash
-    npx expo start
-   ```
+## Getting Started
 
-In the output, you'll find options to open the app in a
+### Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node.js (v14 or newer)
+- npm or yarn
+- Expo CLI
+- iOS Simulator or Android Emulator (optional)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Installation
 
-## Get a fresh project
-
-When you're ready, run:
-
+1. Clone the repository
 ```bash
-npm run reset-project
+git clone [repository-url]
+cd arkalardayim-anne
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
 
-## Learn more
+3. Start the development server
+```bash
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+### Running the App
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- Press `i` to run on iOS simulator
+- Press `a` to run on Android emulator
+- Scan the QR code with Expo Go (Android) or Camera app (iOS) to run on your device
 
-## Join the community
+## Project Structure
 
-Join our community of developers creating universal apps.
+```
+arkalardayim-anne/
+├── app/                    # App screens and navigation
+│   ├── (tabs)/            # Tab-based screens
+│   └── onboarding/        # Onboarding screens
+├── assets/                 # Static assets
+├── components/            # Reusable components
+├── constants/             # App constants
+└── services/              # API and service integrations
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

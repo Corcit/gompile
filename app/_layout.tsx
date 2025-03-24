@@ -1,39 +1,80 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import React, { useEffect, useState } from 'react';
+import { Stack, SplashScreen } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, StyleSheet } from 'react-native';
+import { useColorScheme } from 'react-native';
+import { Colors } from '../constants/Colors';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const [isReady, setIsReady] = useState(false);
+  // We'll use dark mode always as per requirements
+  const colorScheme = 'dark';
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    // Prepare resources
+    async function prepare() {
+      try {
+        // Check if onboarding is completed
+        const onboardingCompleted = await AsyncStorage.getItem('@onboarding:completed');
+        
+        // Any other preparation tasks like loading fonts, etc.
+        
+      } catch (e) {
+        console.warn('Error preparing app:', e);
+      } finally {
+        // Tell the application to render
+        setIsReady(true);
+        SplashScreen.hideAsync();
+      }
     }
-  }, [loaded]);
 
-  if (!loaded) {
-    return null;
+    prepare();
+  }, []);
+
+  if (!isReady) {
+    return (
+      <View style={[styles.container, { backgroundColor: Colors.dark.background }]}>
+        <Text style={[styles.loadingText, { color: Colors.dark.text }]}>Loading...</Text>
+      </View>
+    );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+    <>
+      <StatusBar style="light" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: Colors.dark.background },
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="onboarding/index" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="onboarding/welcome" />
+        <Stack.Screen name="onboarding/nickname" />
+        <Stack.Screen name="onboarding/avatar" />
+        <Stack.Screen name="onboarding/experience" />
+        <Stack.Screen name="onboarding/notifications" />
+        <Stack.Screen name="onboarding/final-registration" />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+});
