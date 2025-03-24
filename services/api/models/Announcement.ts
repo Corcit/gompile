@@ -31,17 +31,13 @@ export interface Channel {
     requireApproval: boolean;    // Whether posts require approval
     isPublic: boolean;           // Whether channel is visible in directory
   };
+  announcementCount: number;     // Number of announcements
 }
 
 /**
  * Channel types
  */
-export enum ChannelType {
-  PUBLIC = 'public',             // Public channel anyone can access
-  OFFICIAL = 'official',         // Official channel from authorities
-  PRIVATE = 'private',           // Private/invite-only channel
-  LOCATION_BASED = 'location-based' // Geo-fenced channel
-}
+export type ChannelType = 'official' | 'community' | 'news' | 'other';
 
 /**
  * Channel categories
@@ -79,19 +75,14 @@ export interface Announcement {
     size?: number;
   }[];
   metadata?: {                   // Additional metadata for the announcement
-    urgencyLevel?: 'low' | 'medium' | 'high';
+    urgencyLevel?: 'high' | 'medium' | 'low';
     eventDate?: Date;
     eventLocation?: string;
     targetGroups?: string[];
     categories?: string[];
     tags?: string[];
   };
-  stats: {                       // Statistics
-    views: number;               // View count
-    likes: number;               // Like count
-    shares: number;              // Share count
-    comments: number;            // Comment count
-  };
+  stats: AnnouncementStats;
   allowComments: boolean;        // Whether comments are enabled
 }
 
@@ -158,4 +149,12 @@ export interface ChannelSearchFilter {
   sortOrder?: 'asc' | 'desc';           // Sort order
   limit?: number;                       // Maximum number of results
   offset?: number;                      // Offset for pagination
+}
+
+export interface AnnouncementStats {
+  views: number;
+  likes: number;
+  shares: number;
+  comments: number;
+  isLiked?: boolean;
 } 

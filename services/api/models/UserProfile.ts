@@ -25,13 +25,15 @@ export interface Achievement {
   id: string;              // Unique identifier for the achievement
   name: string;            // Name of the achievement
   description: string;     // Description of how to earn it
-  iconUrl: string;         // URL to the achievement icon
+  iconUrl?: string;         // URL to the achievement icon
+  unlockedAt?: string;     // When the user unlocked this achievement
+  progress: number;        // Progress towards the achievement
   requirement: {
     type: 'attendance' | 'streak' | 'participation' | 'special'; // Type of achievement
     count?: number;        // Required count (e.g., attend 5 protests)
     condition?: string;    // Special condition if applicable
+    target: number;         // Target value for the achievement
   };
-  unlockedAt?: Date;       // When the user unlocked this achievement
 }
 
 /**

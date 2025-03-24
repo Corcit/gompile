@@ -63,7 +63,7 @@ export default function SettingsScreen() {
       setSettings(extendedSettings);
     } catch (error) {
       console.error('Error loading user settings:', error);
-      Alert.alert('Error', 'Failed to load settings. Please try again later.');
+      Alert.alert('Hata', 'Ayarlar yüklenemedi. Lütfen daha sonra tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
@@ -118,14 +118,14 @@ export default function SettingsScreen() {
       // This would use the device's notification system
       if (key === 'notificationsEnabled' && value) {
         Alert.alert(
-          'Notifications',
-          'You have enabled notifications for this app.',
-          [{ text: 'OK' }]
+          'Bildirimler',
+          'Uygulama bildirimleri etkinleştirildi.',
+          [{ text: 'Tamam' }]
         );
       }
     } catch (error) {
       console.error('Error updating notification setting:', error);
-      Alert.alert('Error', 'Failed to update notification settings. Please try again.');
+      Alert.alert('Hata', 'Bildirim ayarları güncellenemedi. Lütfen tekrar deneyin.');
       // Revert changes on error
       await loadUserSettings();
     } finally {
@@ -222,13 +222,13 @@ export default function SettingsScreen() {
       
       // Notify user about app restart
       Alert.alert(
-        'Theme Updated',
-        `Theme changed to ${value ? 'dark' : 'light'} mode. Some changes may require restarting the app.`,
-        [{ text: 'OK' }]
+        'Tema Güncellendi',
+        `Tema ${value ? 'koyu' : 'açık'} moda değiştirildi. Bazı değişiklikler uygulamanın yeniden başlatılmasını gerektirebilir.`,
+        [{ text: 'Tamam' }]
       );
     } catch (error) {
       console.error('Error updating theme settings:', error);
-      Alert.alert('Error', 'Failed to update theme settings. Please try again.');
+      Alert.alert('Hata', 'Tema ayarları güncellenemedi. Lütfen tekrar deneyin.');
       // Revert changes on error
       await loadUserSettings();
     } finally {
@@ -238,41 +238,29 @@ export default function SettingsScreen() {
   
   // Handle edit profile
   const handleEditProfile = () => {
-    // Navigate to edit profile screen
-    Alert.alert('Edit Profile', 'This would open the profile edit screen.');
-    // In a real app, navigate to the profile edit screen
+    Alert.alert('Profili Düzenle', 'Bu işlem profil düzenleme ekranını açacak.');
   };
   
   // Handle sign out
   const handleSignOut = async () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      'Çıkış Yap',
+      'Çıkış yapmak istediğinizden emin misiniz?',
       [
-        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Sign Out',
+          text: 'İptal',
+          style: 'cancel',
+        },
+        {
+          text: 'Çıkış Yap',
           style: 'destructive',
           onPress: async () => {
             try {
-              setIsSaving(true);
-              
-              // In a real implementation, we would call signOut method
-              // This is a placeholder until the API method is implemented
-              // await userService.signOut();
-              
-              // Clear local storage
-              await AsyncStorage.clear();
-              
-              // Notify the user
-              Alert.alert('Signed Out', 'You have been signed out successfully');
-              
-              // In a real app, this would navigate to the authentication screen
+              await userService.signOut();
+              // Handle successful sign out
             } catch (error) {
               console.error('Error signing out:', error);
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
-            } finally {
-              setIsSaving(false);
+              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
             }
           },
         },

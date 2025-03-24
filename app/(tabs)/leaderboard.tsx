@@ -145,16 +145,15 @@ export default function LeaderboardScreen() {
     if (!userData) return;
 
     try {
-      const timeframeText = leaderboardType === 'allTime' ? 'all time' : 
-                           leaderboardType === 'weekly' ? 'this week' : 'this month';
+      const timeframeText = leaderboardType === 'allTime' ? 'tüm zamanlar' : 
+                           leaderboardType === 'weekly' ? 'bu hafta' : 'bu ay';
       
-      const shareMessage = `I'm ranked #${userData.rank} on the Gompile app ${timeframeText} leaderboard with ${userData.score} protests attended! Join the movement and make a difference! #Gompile`;
+      const shareMessage = `Gompile uygulamasında ${timeframeText} sıralamasında #${userData.rank}. sıradayım ve ${userData.score} eyleme katıldım! Harekete katıl ve fark yarat! #Gompile`;
       
       const result = await Share.share({
         message: shareMessage,
-        // For iOS, you can also include a URL
         url: Platform.OS === 'ios' ? 'https://gompile.app' : undefined,
-        title: 'My Gompile Ranking'
+        title: 'Gompile Sıralamam'
       });
       
       if (result.action === Share.sharedAction) {
@@ -248,59 +247,23 @@ export default function LeaderboardScreen() {
                 onPress={() => setModalVisible(false)}
                 style={styles.closeButton}
               >
-                <MaterialIcons 
-                  name="close" 
-                  size={24} 
-                  color={isDark ? "#fff" : "#333"} 
-                />
+                <Ionicons name="close" size={24} color={isDark ? Colors.dark.text : Colors.light.text} />
               </TouchableOpacity>
             </View>
-            
-            <View style={styles.achievementDetail}>
-              <Badge
-                title={selectedAchievement.name}
-                description={selectedAchievement.description}
-                icon={getAchievementIcon(selectedAchievement)}
-                type={selectedAchievement.requirement.type as any}
-                size="large"
-                unlocked={Boolean(selectedAchievement.unlockedAt)}
-              />
-            </View>
-            
-            <View style={styles.achievementInfo}>
-              <Text style={[styles.achievementDescription, isDark && styles.darkText]}>
-                {selectedAchievement.description}
-              </Text>
-              
-              <View style={styles.requirementInfo}>
-                <Text style={[styles.requirementTitle, isDark && styles.darkText]}>
-                  How to earn:
-                </Text>
-                <Text style={[styles.requirementDescription, isDark && styles.darkSubText]}>
-                  {selectedAchievement.requirement.type === 'attendance' && selectedAchievement.requirement.count
-                    ? `Attend ${selectedAchievement.requirement.count} protests`
-                    : selectedAchievement.requirement.type === 'streak' && selectedAchievement.requirement.count
-                    ? `Maintain a streak of ${selectedAchievement.requirement.count} days`
-                    : selectedAchievement.requirement.condition || 'Complete special requirements'}
-                </Text>
-              </View>
-              
-              {selectedAchievement.unlockedAt && (
-                <View style={styles.unlockedInfo}>
-                  <MaterialIcons name="verified" size={18} color={Colors[colorScheme || 'light'].success} />
-                  <Text style={[styles.unlockedText, isDark && styles.darkSuccessText]}>
-                    Unlocked on {new Date(selectedAchievement.unlockedAt).toLocaleDateString()}
-                  </Text>
-                </View>
-              )}
-            </View>
-            
+            <Image
+              source={getAchievementIcon(selectedAchievement)}
+              style={styles.modalAchievementIcon}
+            />
+            <Text style={[styles.modalDescription, isDark && styles.darkText]}>
+              {selectedAchievement.description}
+            </Text>
+            <Text style={[styles.modalProgress, isDark && styles.darkText]}>
+              İlerleme: {selectedAchievement.progress}/{selectedAchievement.requirement.target}
+            </Text>
             <RoundedButton
-              variant="primary"
-              size="medium"
-              title="Close"
+              title="Kapat"
               onPress={() => setModalVisible(false)}
-              style={styles.closeModalButton}
+              style={styles.modalButton}
             />
           </View>
         </View>
@@ -907,51 +870,22 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 5,
   },
-  achievementDetail: {
-    alignItems: 'center',
-    marginVertical: 10,
+  modalAchievementIcon: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
   },
-  achievementInfo: {
-    width: '100%',
-    marginVertical: 10,
-  },
-  achievementDescription: {
+  modalDescription: {
     fontSize: 16,
     textAlign: 'center',
     color: '#333',
     marginBottom: 15,
   },
-  requirementInfo: {
-    backgroundColor: '#f5f5f5',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  darkRequirementInfo: {
-    backgroundColor: '#2c2c2c',
-  },
-  requirementTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#333',
-  },
-  requirementDescription: {
+  modalProgress: {
     fontSize: 14,
     color: '#666',
   },
-  unlockedInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  unlockedText: {
-    marginLeft: 5,
-    fontSize: 14,
-    color: '#28a745',
-  },
-  closeModalButton: {
+  modalButton: {
     marginTop: 10,
     width: '50%',
   },

@@ -222,7 +222,7 @@ export default function AnnouncementsScreen() {
   // Format date for display
   const formatDate = (dateString: Date): string => {
     const date = new Date(dateString);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    return `${date.toLocaleDateString('tr-TR')} ${date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   // Render channel item
@@ -248,30 +248,37 @@ export default function AnnouncementsScreen() {
             isDark && styles.darkChannelTypeTag
           ]}>
             <Text style={[styles.channelTypeText, isDark && styles.darkChannelTypeText]}>
-              {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+              {item.type === 'official' ? 'Resmi' : 
+               item.type === 'community' ? 'Topluluk' : 
+               item.type === 'news' ? 'Haber' : 'Diğer'}
             </Text>
           </View>
         </View>
-        <Text style={[styles.channelDescription, isDark && styles.darkSubText]}>
+        <Text style={[styles.channelDescription, isDark && styles.darkSubText]} numberOfLines={2}>
           {item.description}
         </Text>
-        <Text style={[styles.subscriberCount, isDark && styles.darkSubText]}>
-          {item.subscriberCount.toLocaleString()} subscribers
-        </Text>
+        <View style={styles.channelStats}>
+          <Text style={[styles.channelStat, isDark && styles.darkSubText]}>
+            {item.subscriberCount} Takipçi
+          </Text>
+          <Text style={[styles.channelStat, isDark && styles.darkSubText]}>
+            {item.announcementCount} Duyuru
+          </Text>
+        </View>
       </View>
       <Switch
         value={item.isSubscribed}
         onValueChange={() => toggleSubscription(item.id)}
-        trackColor={{ false: isDark ? '#444' : '#767577', true: Colors[colorScheme || 'light'].tint }}
-        thumbColor={isDark ? '#f4f3f4' : '#f4f3f4'}
+        trackColor={{ false: '#767577', true: Colors.dark.tint }}
+        thumbColor={item.isSubscribed ? Colors.dark.accent : '#f4f3f4'}
       />
     </RoundedCard>
   );
 
   // Render announcement item
   const renderAnnouncementItem = ({ item }: { item: UIAnnouncement }) => {
-    const urgencyLevel = getUrgencyLevel(item);
     const isExpanded = expandedAnnouncement === item.id;
+    const urgencyLevel = getUrgencyLevel(item);
     
     return (
       <RoundedCard 
@@ -280,98 +287,82 @@ export default function AnnouncementsScreen() {
           isDark && styles.darkAnnouncementItem,
           !item.isRead && styles.unreadAnnouncement,
           !item.isRead && isDark && styles.darkUnreadAnnouncement,
-          urgencyLevel === 3 && styles.urgentAnnouncement,
-          urgencyLevel === 3 && isDark && styles.darkUrgentAnnouncement,
+          urgencyLevel > 0 && styles.urgentAnnouncement,
+          urgencyLevel > 0 && isDark && styles.darkUrgentAnnouncement,
         ]}
       >
         <TouchableOpacity 
           style={styles.announcementContent}
           onPress={() => markAsRead(item.id)}
         >
-          {!item.isRead && <View style={[styles.unreadDot, isDark && styles.darkUnreadDot]} />}
+          <View style={styles.announcementHeader}>
+            <View style={styles.announcementMeta}>
+              <Text style={[styles.channelName, isDark && styles.darkText]}>
+                {item.channelName}
+              </Text>
+              <Text style={[styles.timestamp, isDark && styles.darkSubText]}>
+                {formatDate(item.createdAt)}
+              </Text>
+            </View>
+            {urgencyLevel > 0 && (
+              <View style={[
+                styles.urgencyTag,
+                isDark && styles.darkUrgencyTag,
+                { backgroundColor: urgencyLevel === 3 ? '#dc3545' : urgencyLevel === 2 ? '#ffc107' : '#28a745' }
+              ]}>
+                <Text style={styles.urgencyText}>
+                  {urgencyLevel === 3 ? 'Acil' : urgencyLevel === 2 ? 'Önemli' : 'Bilgi'}
+                </Text>
+              </View>
+            )}
+          </View>
           
-          <Text style={[styles.announcementMeta, isDark && styles.darkSubText]}>
-            <Text style={[styles.channelLabel, isDark && styles.darkChannelLabel]}>
-              {item.channelName}
-            </Text> • {formatDate(item.createdAt)}
-          </Text>
-          
-          <Text style={[styles.announcementTitle, isDark && styles.darkText]}>
-            {urgencyLevel === 3 && (
-              <Ionicons 
-                name="warning" 
-                size={16} 
-                color={isDark ? "#ff6b6b" : "#ff3b30"} 
-                style={styles.warningIcon} 
-              />
-            )} 
+          <Text 
+            style={[
+              styles.announcementTitle,
+              isDark && styles.darkText,
+              !item.isRead && styles.unreadText
+            ]}
+            numberOfLines={isExpanded ? undefined : 2}
+          >
             {item.title}
           </Text>
           
-          <Text 
-            style={[styles.announcementText, isDark && styles.darkSubText]} 
-            numberOfLines={isExpanded ? undefined : 3}
-          >
-            {item.content}
-          </Text>
-          
-          {item.attachments && item.attachments.length > 0 && (
-            <View style={styles.attachments}>
-              {item.attachments.map((attachment, index) => (
-                <View key={index} style={styles.attachment}>
-                  <MaterialIcons 
-                    name={
-                      attachment.type === 'image' ? 'image' : 
-                      attachment.type === 'video' ? 'videocam' : 
-                      attachment.type === 'document' ? 'description' : 'link'
-                    } 
-                    size={16} 
-                    color={isDark ? "#aaa" : "#757575"} 
-                  />
-                  <Text style={[styles.attachmentText, isDark && styles.darkSubText]}>
-                    {attachment.title || attachment.url.split('/').pop()}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-          
           {isExpanded && (
-            <View style={styles.announcementActions}>
-              <TouchableOpacity 
-                style={styles.actionButton}
-                onPress={() => likeAnnouncement(item.id)}
-              >
-                <Ionicons name="heart-outline" size={18} color={isDark ? "#aaa" : "#757575"} />
-                <Text style={[styles.actionText, isDark && styles.darkSubText]}>
-                  Like ({item.stats.likes})
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.actionButton}
-                onPress={() => shareAnnouncement(item.id)}
-              >
-                <Ionicons name="share-outline" size={18} color={isDark ? "#aaa" : "#757575"} />
-                <Text style={[styles.actionText, isDark && styles.darkSubText]}>
-                  Share ({item.stats.shares})
-                </Text>
-              </TouchableOpacity>
-              
-              {item.allowComments && (
-                <TouchableOpacity style={styles.actionButton}>
-                  <Ionicons name="chatbubble-outline" size={18} color={isDark ? "#aaa" : "#757575"} />
-                  <Text style={[styles.actionText, isDark && styles.darkSubText]}>
-                    Comment ({item.stats.comments})
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <Text style={[styles.announcementBody, isDark && styles.darkText]}>
+              {item.content}
+            </Text>
           )}
           
-          <Text style={[styles.readMoreText, isDark && styles.darkReadMoreText]}>
-            {isExpanded ? 'Show less' : 'Read more...'}
-          </Text>
+          <View style={styles.announcementActions}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => likeAnnouncement(item.id)}
+            >
+              <Ionicons 
+                name={item.stats.isLiked ? "heart" : "heart-outline"} 
+                size={20} 
+                color={item.stats.isLiked ? Colors.dark.tint : (isDark ? Colors.dark.text : Colors.light.text)} 
+              />
+              <Text style={[styles.actionText, isDark && styles.darkSubText]}>
+                {item.stats.likes}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => shareAnnouncement(item.id)}
+            >
+              <Ionicons 
+                name="share-social-outline" 
+                size={20} 
+                color={isDark ? Colors.dark.text : Colors.light.text} 
+              />
+              <Text style={[styles.actionText, isDark && styles.darkSubText]}>
+                {item.stats.shares}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
       </RoundedCard>
     );
@@ -380,32 +371,25 @@ export default function AnnouncementsScreen() {
   // Render empty state for announcements
   const renderEmptyAnnouncements = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="notifications-off-outline" size={64} color={isDark ? "#555" : "#ddd"} />
-      <Text style={[styles.emptyTitle, isDark && styles.darkText]}>No announcements</Text>
-      <Text style={[styles.emptySubtitle, isDark && styles.darkSubText]}>
-        {channels.filter(c => c.isSubscribed).length === 0 
-          ? 'Subscribe to channels to get announcements' 
-          : 'Check back later for new announcements'}
+      <MaterialIcons name="notifications-none" size={48} color={isDark ? Colors.dark.text : Colors.light.text} />
+      <Text style={[styles.emptyTitle, isDark && styles.darkText]}>
+        Henüz Duyuru Yok
       </Text>
-      {channels.filter(c => c.isSubscribed).length === 0 && (
-        <RoundedButton
-          variant="primary"
-          size="medium"
-          title="Browse Channels"
-          onPress={() => setActiveTab('channels')}
-          style={styles.browseButton}
-        />
-      )}
+      <Text style={[styles.emptySubtitle, isDark && styles.darkText]}>
+        Takip ettiğiniz kanallardan duyurular burada görünecek
+      </Text>
     </View>
   );
 
   // Render empty state for channels
   const renderEmptyChannels = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="megaphone-outline" size={64} color={isDark ? "#555" : "#ddd"} />
-      <Text style={[styles.emptyTitle, isDark && styles.darkText]}>No channels available</Text>
-      <Text style={[styles.emptySubtitle, isDark && styles.darkSubText]}>
-        Check back later for new channels
+      <MaterialIcons name="campaign" size={48} color={isDark ? Colors.dark.text : Colors.light.text} />
+      <Text style={[styles.emptyTitle, isDark && styles.darkText]}>
+        Kanal Bulunamadı
+      </Text>
+      <Text style={[styles.emptySubtitle, isDark && styles.darkText]}>
+        Şu anda takip edilebilecek kanal bulunmuyor
       </Text>
     </View>
   );
@@ -642,7 +626,12 @@ const styles = StyleSheet.create({
     color: '#757575',
     marginBottom: 5,
   },
-  subscriberCount: {
+  channelStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  channelStat: {
     fontSize: 12,
     color: '#9E9E9E',
   },
@@ -670,32 +659,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ff6b6b',
   },
-  unreadDot: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#0a7ea4',
-  },
-  darkUnreadDot: {
-    backgroundColor: Colors.dark.tint,
-  },
   announcementContent: {
     flex: 1,
   },
+  announcementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   announcementMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timestamp: {
     fontSize: 12,
     color: '#9E9E9E',
-    marginBottom: 5,
   },
-  channelLabel: {
-    fontWeight: '600',
-    color: '#757575',
+  urgencyTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
   },
-  darkChannelLabel: {
-    color: '#bbb',
+  darkUrgencyTag: {
+    backgroundColor: '#333',
+  },
+  urgencyText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#fff',
   },
   announcementTitle: {
     fontSize: 16,
@@ -703,26 +694,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#333',
   },
-  warningIcon: {
-    marginRight: 5,
-  },
-  announcementText: {
+  announcementBody: {
     fontSize: 14,
     color: '#424242',
     lineHeight: 20,
-  },
-  attachments: {
-    marginTop: 10,
-  },
-  attachment: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  attachmentText: {
-    marginLeft: 5,
-    fontSize: 12,
-    color: '#757575',
   },
   announcementActions: {
     flexDirection: 'row',
@@ -740,15 +715,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#757575',
     marginLeft: 3,
-  },
-  readMoreText: {
-    fontSize: 12,
-    color: '#0a7ea4',
-    marginTop: 8,
-    fontWeight: '500',
-  },
-  darkReadMoreText: {
-    color: Colors.dark.tint,
   },
   emptyContainer: {
     flex: 1,
@@ -770,7 +736,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  browseButton: {
-    marginTop: 10,
+  readMoreText: {
+    fontSize: 12,
+    color: '#0a7ea4',
+    marginTop: 8,
+    fontWeight: '500',
+  },
+  darkReadMoreText: {
+    color: Colors.dark.tint,
+  },
+  unreadText: {
+    fontWeight: '600',
   },
 });

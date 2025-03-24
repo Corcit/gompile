@@ -50,7 +50,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Ana Sayfa',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="home" color={color} size={size} />
           ),
@@ -60,7 +60,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="leaderboard"
         options={{
-          title: 'Leaderboard',
+          title: 'Sıralama',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="leaderboard" color={color} size={size} />
           ),
@@ -69,7 +69,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="announcements"
         options={{
-          title: 'News',
+          title: 'Haberler',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="megaphone" color={color} size={size} />
           ),
@@ -78,7 +78,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: 'Ayarlar',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" color={color} size={size} />
           ),
