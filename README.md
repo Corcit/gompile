@@ -1,4 +1,4 @@
-# Arkalardayım Anne
+# Gompile
 
 A mobile application built with React Native and Expo for tracking and managing protest attendance and activist engagement.
 
@@ -33,8 +33,8 @@ A mobile application built with React Native and Expo for tracking and managing 
 
 1. Clone the repository
 ```bash
-git clone [repository-url]
-cd arkalardayim-anne
+git clone https://github.com/Corcit/gompile.git
+cd gompile
 ```
 
 2. Install dependencies
@@ -58,7 +58,7 @@ npx expo start
 ## Project Structure
 
 ```
-arkalardayim-anne/
+gompile/
 ├── app/                    # App screens and navigation
 │   ├── (tabs)/            # Tab-based screens
 │   └── onboarding/        # Onboarding screens
