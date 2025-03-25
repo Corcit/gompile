@@ -18,147 +18,89 @@ import { Colors } from '../../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RoundedCard from '../../components/ui/RoundedCard';
 import RoundedButton from '../../components/ui/RoundedButton';
-import { userService } from '../../services/api';
-import { UserSettings as UserSettingsType, createDefaultUserSettings } from '../../services/api/models/UserProfile';
-
-// Extended user settings interface with additional UI-specific fields
-interface ExtendedUserSettings extends UserSettingsType {
-  nickname?: string;
-  avatarUrl?: string;
-  quietHoursEnabled?: boolean;
-  quietHoursStart?: string;
-  quietHoursEnd?: string;
-  showOnLeaderboard?: boolean;
-}
+import { useUserService } from '../../services/api/hooks/useUserService';
+import { UserSettings } from '../../services/api/models/UserProfile';
+import EditProfileModal from '../../components/settings/EditProfileModal';
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
-  // State for user settings
-  const [settings, setSettings] = useState<ExtendedUserSettings>(createDefaultUserSettings());
+  const userService = useUserService();
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditProfileModalVisible, setIsEditProfileModalVisible] = useState(false);
   
-  // Load user settings from the API
-  const loadUserSettings = useCallback(async () => {
+  useEffect(() => {
+    loadUserSettings();
+  }, []);
+  
+  const loadUserSettings = async () => {
     try {
-      setIsLoading(true);
       const userSettings = await userService.getUserSettings();
-      
-      // Get additional user profile data to enhance settings
-      const userProfile = await userService.getCurrentUser();
-      
-      // Combine API settings with UI-specific settings
-      const extendedSettings: ExtendedUserSettings = {
-        ...userSettings,
-        nickname: userProfile.nickname,
-        avatarUrl: userProfile.avatarId ? `https://api.arkalardayim.com/avatars/${userProfile.avatarId}.png` : undefined,
-        quietHoursEnabled: false, // This would come from the API in a real implementation
-        quietHoursStart: '22:00', // These would come from the API
-        quietHoursEnd: '08:00',   // These would come from the API
-        showOnLeaderboard: true   // This would come from the API
-      };
-      
-      setSettings(extendedSettings);
+      setSettings(userSettings);
     } catch (error) {
-      console.error('Error loading user settings:', error);
-      Alert.alert('Hata', 'Ayarlar yüklenemedi. Lütfen daha sonra tekrar deneyin.');
+      Alert.alert('Error', 'Failed to load user settings');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
   
-  // Load data on screen focus
-  useFocusEffect(
-    useCallback(() => {
-      loadUserSettings();
-    }, [loadUserSettings])
-  );
+  const handleEditProfile = () => {
+    setIsEditProfileModalVisible(true);
+  };
   
-  // Update a notification setting
-  const updateNotificationSetting = async (key: string, value: boolean) => {
+  const handleSaveProfile = async (nickname: string, avatarId: string) => {
     if (!settings) return;
     
+    setIsLoading(true);
     try {
-      setIsSaving(true);
-      
-      // Update local state first for immediate feedback
-      const updatedSettings: ExtendedUserSettings = {
-        ...settings,
-        notificationsEnabled: key === 'notificationsEnabled' 
-          ? value 
-          : settings.notificationsEnabled,
-        channelNotifications: {
-          ...settings.channelNotifications,
-          ...(key === 'announcements' && { announcements: { enabled: value, priority: settings.channelNotifications.announcements?.priority || 'medium' } }),
-          ...(key === 'events' && { events: { enabled: value, priority: settings.channelNotifications.events?.priority || 'medium' } }),
-          ...(key === 'achievements' && { achievements: { enabled: value, priority: settings.channelNotifications.achievements?.priority || 'medium' } }),
-          ...(key === 'leaderboard' && { leaderboard: { enabled: value, priority: settings.channelNotifications.leaderboard?.priority || 'low' } }),
-        },
-        dailyReminderEnabled: key === 'dailyReminderEnabled' ? value : settings.dailyReminderEnabled
-      };
-      
-      setSettings(updatedSettings);
-      
-      // Extract only the API-compatible properties for the update
-      const apiSettings: Partial<UserSettingsType> = {
-        notificationsEnabled: updatedSettings.notificationsEnabled,
-        channelNotifications: updatedSettings.channelNotifications,
-        dailyReminderEnabled: updatedSettings.dailyReminderEnabled,
-        dailyReminderTime: updatedSettings.dailyReminderTime,
-        shareAttendanceByDefault: updatedSettings.shareAttendanceByDefault,
-        theme: updatedSettings.theme
-      };
-      
-      // Send update to the server
-      await userService.updateSettings(apiSettings);
-      
-      // If enabling notifications, request permission in a real app
-      // This would use the device's notification system
-      if (key === 'notificationsEnabled' && value) {
-        Alert.alert(
-          'Bildirimler',
-          'Uygulama bildirimleri etkinleştirildi.',
-          [{ text: 'Tamam' }]
-        );
-      }
+      await userService.updateProfile({ nickname, avatarId });
+      Alert.alert('Success', 'Profile updated successfully');
+      loadUserSettings(); // Reload settings to get updated profile
+      setIsEditProfileModalVisible(false);
     } catch (error) {
-      console.error('Error updating notification setting:', error);
-      Alert.alert('Hata', 'Bildirim ayarları güncellenemedi. Lütfen tekrar deneyin.');
-      // Revert changes on error
-      await loadUserSettings();
+      Alert.alert('Error', 'Failed to update profile');
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
   
-  // Toggle quiet hours
-  const toggleQuietHours = async (value: boolean) => {
+  const handleUpdateNotifications = async (enabled: boolean) => {
     if (!settings) return;
     
     try {
-      setIsSaving(true);
-      
-      // Update local state
-      const updatedSettings: ExtendedUserSettings = {
+      const updatedSettings = {
         ...settings,
-        quietHoursEnabled: value,
+        notifications: {
+          enabled
+        }
       };
       
+      await userService.updateSettings(updatedSettings);
       setSettings(updatedSettings);
-      
-      // In a real implementation, we would send this to the API
-      // await userService.updateSettings({...});
-      // For now, we'll just simulate the API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 500));
     } catch (error) {
-      console.error('Error updating quiet hours settings:', error);
-      Alert.alert('Error', 'Failed to update quiet hours settings. Please try again.');
-      // Revert changes on error
-      await loadUserSettings();
-    } finally {
-      setIsSaving(false);
+      Alert.alert('Error', 'Failed to update notification settings');
+    }
+  };
+  
+  const handleToggleQuietHours = async (enabled: boolean) => {
+    if (!settings) return;
+    
+    try {
+      const updatedSettings = {
+        ...settings,
+        quietHours: {
+          ...settings?.quietHours,
+          enabled
+        }
+      };
+      
+      await userService.updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update quiet hours settings');
     }
   };
   
@@ -170,20 +112,12 @@ export default function SettingsScreen() {
       setIsSaving(true);
       
       // Update local state
-      const updatedSettings: ExtendedUserSettings = {
+      const updatedSettings: UserSettings = {
         ...settings,
         ...(key === 'showOnLeaderboard' && { showOnLeaderboard: value }),
-        ...(key === 'shareAttendanceByDefault' && { shareAttendanceByDefault: value }),
       };
       
       setSettings(updatedSettings);
-      
-      // For shareAttendanceByDefault, update the API
-      if (key === 'shareAttendanceByDefault') {
-        await userService.updateSettings({
-          shareAttendanceByDefault: value
-        });
-      }
       
       // For showOnLeaderboard, we would update the API if it had this field
       // Currently simulating the API call with a delay
@@ -198,47 +132,6 @@ export default function SettingsScreen() {
     } finally {
       setIsSaving(false);
     }
-  };
-  
-  // Toggle dark mode
-  const toggleDarkMode = async (value: boolean) => {
-    if (!settings) return;
-    
-    try {
-      setIsSaving(true);
-      
-      // Update local state
-      const updatedSettings: ExtendedUserSettings = {
-        ...settings,
-        theme: value ? 'dark' : 'light',
-      };
-      
-      setSettings(updatedSettings);
-      
-      // Send update to the server
-      await userService.updateSettings({
-        theme: value ? 'dark' : 'light'
-      });
-      
-      // Notify user about app restart
-      Alert.alert(
-        'Tema Güncellendi',
-        `Tema ${value ? 'koyu' : 'açık'} moda değiştirildi. Bazı değişiklikler uygulamanın yeniden başlatılmasını gerektirebilir.`,
-        [{ text: 'Tamam' }]
-      );
-    } catch (error) {
-      console.error('Error updating theme settings:', error);
-      Alert.alert('Hata', 'Tema ayarları güncellenemedi. Lütfen tekrar deneyin.');
-      // Revert changes on error
-      await loadUserSettings();
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
-  // Handle edit profile
-  const handleEditProfile = () => {
-    Alert.alert('Profili Düzenle', 'Bu işlem profil düzenleme ekranını açacak.');
   };
   
   // Handle sign out
@@ -306,28 +199,10 @@ export default function SettingsScreen() {
     );
   };
 
-  if (isLoading) {
+  if (isLoading || !settings) {
     return (
-      <View style={[styles.loadingContainer, isDark && styles.darkContainer]}>
-        <ActivityIndicator size="large" color={Colors[colorScheme || 'light'].tint} />
-        <Text style={[styles.loadingText, isDark && styles.darkText]}>Loading settings...</Text>
-      </View>
-    );
-  }
-  
-  if (!settings) {
-    return (
-      <View style={[styles.loadingContainer, isDark && styles.darkContainer]}>
-        <Text style={[styles.errorText, isDark && styles.darkText]}>
-          Failed to load settings. Please try again later.
-        </Text>
-        <RoundedButton
-          variant="primary"
-          size="medium"
-          title="Retry"
-          onPress={loadUserSettings}
-          style={styles.retryButton}
-        />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
   }
@@ -354,22 +229,22 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, isDark && styles.darkSectionTitle]}>Profile</Text>
           <RoundedCard style={[styles.profileCard, isDark && styles.darkCard]}>
             <View style={styles.avatarContainer}>
-              {settings.avatarUrl ? (
+              {settings?.profile?.avatarUrl ? (
                 <Image 
-                  source={{ uri: settings.avatarUrl }} 
+                  source={{ uri: settings?.profile?.avatarUrl }} 
                   style={styles.avatarImage} 
                 />
               ) : (
                 <View style={[styles.avatar, isDark && styles.darkAvatar]}>
                   <Text style={styles.avatarInitial}>
-                    {settings.nickname?.charAt(0) || 'U'}
+                    {settings?.profile?.nickname?.charAt(0) || 'U'}
                   </Text>
                 </View>
               )}
             </View>
             <View style={styles.profileInfo}>
               <Text style={[styles.nicknameLarge, isDark && styles.darkText]}>
-                {settings.nickname || 'User'}
+                {settings?.profile?.nickname || 'User'}
               </Text>
               <RoundedButton
                 variant="outline"
@@ -395,120 +270,13 @@ export default function SettingsScreen() {
               </Text>
             </View>
             <Switch
-              value={settings.notificationsEnabled}
-              onValueChange={(value) => updateNotificationSetting('notificationsEnabled', value)}
+              value={settings?.notifications?.enabled}
+              onValueChange={(value) => handleUpdateNotifications(value)}
               trackColor={{ 
                 false: isDark ? '#444' : '#767577', 
                 true: Colors[colorScheme || 'light'].tint 
               }}
               thumbColor={'#f4f3f4'}
-            />
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Announcement Notifications
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                Receive updates for new announcements
-              </Text>
-            </View>
-            <Switch
-              value={settings.channelNotifications?.announcements?.enabled ?? false}
-              onValueChange={(value) => updateNotificationSetting('announcements', value)}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
-              disabled={!settings.notificationsEnabled}
-            />
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Event Reminders
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                Get reminders for upcoming protests
-              </Text>
-            </View>
-            <Switch
-              value={settings.channelNotifications?.events?.enabled ?? false}
-              onValueChange={(value) => updateNotificationSetting('events', value)}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
-              disabled={!settings.notificationsEnabled}
-            />
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Achievement Notifications
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                Be notified when you earn badges
-              </Text>
-            </View>
-            <Switch
-              value={settings.channelNotifications?.achievements?.enabled ?? false}
-              onValueChange={(value) => updateNotificationSetting('achievements', value)}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
-              disabled={!settings.notificationsEnabled}
-            />
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Daily Reminders
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                Daily check-in reminders
-              </Text>
-            </View>
-            <Switch
-              value={settings.dailyReminderEnabled}
-              onValueChange={(value) => updateNotificationSetting('dailyReminderEnabled', value)}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
-              disabled={!settings.notificationsEnabled}
-            />
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Quiet Hours
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                {settings.quietHoursEnabled 
-                  ? `No notifications between ${settings.quietHoursStart || '22:00'} and ${settings.quietHoursEnd || '08:00'}`
-                  : 'Notifications will be delivered at any time'}
-              </Text>
-            </View>
-            <Switch
-              value={settings.quietHoursEnabled}
-              onValueChange={toggleQuietHours}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
-              disabled={!settings.notificationsEnabled}
             />
           </RoundedCard>
         </View>
@@ -527,53 +295,8 @@ export default function SettingsScreen() {
               </Text>
             </View>
             <Switch
-              value={settings.showOnLeaderboard}
+              value={settings?.showOnLeaderboard}
               onValueChange={(value) => togglePrivacySetting('showOnLeaderboard', value)}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
-            />
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Share Attendance by Default
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                Automatically share attendance on social media
-              </Text>
-            </View>
-            <Switch
-              value={settings.shareAttendanceByDefault}
-              onValueChange={(value) => togglePrivacySetting('shareAttendanceByDefault', value)}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
-            />
-          </RoundedCard>
-        </View>
-
-        {/* Appearance Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkSectionTitle]}>Appearance</Text>
-          
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Dark Mode
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                Use dark mode for better visibility
-              </Text>
-            </View>
-            <Switch
-              value={settings.theme === 'dark'}
-              onValueChange={toggleDarkMode}
               trackColor={{ 
                 false: isDark ? '#444' : '#767577', 
                 true: Colors[colorScheme || 'light'].tint 
@@ -684,6 +407,15 @@ export default function SettingsScreen() {
           Version 1.0.0 (Build 100)
         </Text>
       </ScrollView>
+      
+      <EditProfileModal
+        visible={isEditProfileModalVisible}
+        onClose={() => setIsEditProfileModalVisible(false)}
+        onSave={handleSaveProfile}
+        currentNickname={settings?.profile?.nickname || ''}
+        currentAvatarId={settings?.profile?.avatarUrl?.split('/').pop()?.split('.')[0] || ''}
+        isLoading={isLoading}
+      />
     </SafeAreaView>
   );
 }

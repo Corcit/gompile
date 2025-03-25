@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, StyleSheet } from 'react-native';
 import { useColorScheme } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { ApiProvider } from '../services/api/ApiContext';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -44,8 +45,8 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <StatusBar style="light" />
+    <ApiProvider>
+      <StatusBar style="auto" />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -63,7 +64,7 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding/final-registration" />
         <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
       </Stack>
-    </>
+    </ApiProvider>
   );
 }
 

@@ -17,6 +17,7 @@ import { Colors } from '../../constants/Colors';
 import RoundedCard from '../../components/ui/RoundedCard';
 import { attendanceService, userService } from '../../services/api';
 import { AttendanceStats } from '../../services/api/models/Attendance';
+import TamiratStats from '../../components/attendance/TamiratStats';
 
 // Get screen dimensions
 const { width } = Dimensions.get('window');
@@ -40,7 +41,7 @@ export default function HomeScreen() {
   // Placeholder data until API is connected
   const userStats = {
     protestsAttended: 12,
-    rank: 'Experienced Activist',
+    rank: 'Deneyimli Aktivist',
     badges: 5,
     streak: 3,
     totalHours: 36,
@@ -50,11 +51,9 @@ export default function HomeScreen() {
   };
 
   // Load attendance data
-  const loadAttendanceData = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
-      
-      // Get attendance stats
       const stats = await attendanceService.getAttendanceStats();
       setAttendanceStats(stats);
       
@@ -62,7 +61,7 @@ export default function HomeScreen() {
       generateCalendarData(stats);
       
     } catch (error) {
-      console.error("Error loading attendance data:", error);
+      console.error('Error loading attendance stats:', error);
       // Fall back to placeholder data
       generateCalendarData(null);
     } finally {
@@ -96,14 +95,14 @@ export default function HomeScreen() {
   // Refresh data
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadAttendanceData();
-  }, [loadAttendanceData]);
+    await loadData();
+  }, [loadData]);
 
   // Load data on screen focus
   useFocusEffect(
     useCallback(() => {
-      loadAttendanceData();
-    }, [loadAttendanceData])
+      loadData();
+    }, [loadData])
   );
 
   // Format date for display
@@ -136,135 +135,82 @@ export default function HomeScreen() {
     );
   };
 
+  if (isLoading && !refreshing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors[colorScheme || 'light'].tint} />
+        <Text style={[styles.loadingText, isDark && styles.darkText]}>
+          Yükleniyor...
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView 
-      style={styles.container}
+      style={[styles.container, isDark && styles.darkContainer]}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[Colors[colorScheme || 'light'].tint]}
+          tintColor={Colors[colorScheme || 'light'].tint}
+        />
       }
     >
-      <View style={styles.welcomeContainer}>
-        <View style={styles.welcomeTextContainer}>
-          <Text style={styles.welcomeTitle}>Merhaba!</Text>
-          <Text style={styles.welcomeSubtitle}>Ready to make a difference today?</Text>
-        </View>
-        <Image
-          source={require('../../assets/images/mascot.png')}
-          style={styles.mascotImage}
-          resizeMode="contain"
-        />
-      </View>
-
-      <View style={styles.statsContainer}>
-        <Text style={styles.sectionTitle}>Your Activism Stats</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statItem}>
-            <MaterialIcons name="event-available" size={24} color={Colors[colorScheme ?? 'light'].tint} />
-            <Text style={styles.statValue}>{userStats.protestsAttended}</Text>
-            <Text style={styles.statLabel}>Protests</Text>
-          </View>
-          <View style={styles.statItem}>
-            <MaterialIcons name="emoji-events" size={24} color={Colors[colorScheme ?? 'light'].tint} />
-            <Text style={styles.statValue}>{userStats.badges}</Text>
-            <Text style={styles.statLabel}>Badges</Text>
-          </View>
-          <View style={styles.statItem}>
-            <MaterialIcons name="local-fire-department" size={24} color={Colors[colorScheme ?? 'light'].tint} />
-            <Text style={styles.statValue}>{userStats.streak}</Text>
-            <Text style={styles.statLabel}>Week Streak</Text>
-          </View>
-        </View>
-        <View style={styles.rankContainer}>
-          <Text style={styles.rankText}>
-            Your current rank: <Text style={styles.rankValue}>{userStats.rank}</Text>
-          </Text>
-          <TouchableOpacity style={styles.seeMoreButton}>
-            <Text style={styles.seeMoreText}>See All Stats</Text>
-            <MaterialIcons name="arrow-forward" size={16} color={Colors[colorScheme ?? 'light'].tint} />
+      <View style={[styles.header, isDark && styles.darkHeader]}>
+        <View style={[styles.tabsContainer, isDark && styles.darkTabsContainer]}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'stats' && styles.activeTab,
+              isDark && styles.darkTab,
+              activeTab === 'stats' && isDark && styles.darkActiveTab,
+            ]}
+            onPress={() => setActiveTab('stats')}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'stats' && styles.activeTabText,
+                isDark && styles.darkTabText,
+                activeTab === 'stats' && isDark && styles.darkActiveTabText,
+              ]}
+            >
+              İstatistikler
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'calendar' && styles.activeTab,
+              isDark && styles.darkTab,
+              activeTab === 'calendar' && isDark && styles.darkActiveTab,
+            ]}
+            onPress={() => setActiveTab('calendar')}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'calendar' && styles.activeTabText,
+                isDark && styles.darkTabText,
+                activeTab === 'calendar' && isDark && styles.darkActiveTabText,
+              ]}
+            >
+              Takvim
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Tab Selector */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'stats' && styles.activeTabButton]} 
-          onPress={() => setActiveTab('stats')}
-        >
-          <MaterialIcons 
-            name="bar-chart" 
-            size={20} 
-            color={activeTab === 'stats' ? "#fff" : "#aaa"} 
-          />
-          <Text style={[styles.tabText, activeTab === 'stats' && styles.activeTabText]}>
-            Stats
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'calendar' && styles.activeTabButton]} 
-          onPress={() => setActiveTab('calendar')}
-        >
-          <MaterialIcons 
-            name="calendar-today" 
-            size={20} 
-            color={activeTab === 'calendar' ? "#fff" : "#aaa"} 
-          />
-          <Text style={[styles.tabText, activeTab === 'calendar' && styles.activeTabText]}>
-            Calendar
-          </Text>
-        </TouchableOpacity>
-      </View>
-      
-      {/* Content based on active tab */}
-      {activeTab === 'stats' && (
-        <RoundedCard style={styles.detailedStatsContainer}>
-          <Text style={styles.detailedStatsTitle}>My Attendance Stats</Text>
-          
-          {isLoading ? (
-            <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
-          ) : (
-            <>
-              <View style={styles.detailedStatsRow}>
-                <View style={styles.detailedStatItem}>
-                  <Text style={styles.detailedStatValue}>{userStats.protestsAttended}</Text>
-                  <Text style={styles.detailedStatLabel}>Total Protests</Text>
-                </View>
-                <View style={styles.detailedStatItem}>
-                  <Text style={styles.detailedStatValue}>{userStats.verifiedAttendances}</Text>
-                  <Text style={styles.detailedStatLabel}>Verified</Text>
-                </View>
-              </View>
-              
-              <View style={styles.detailedStatsRow}>
-                <View style={styles.detailedStatItem}>
-                  <Text style={styles.detailedStatValue}>{userStats.totalHours}h</Text>
-                  <Text style={styles.detailedStatLabel}>Total Hours</Text>
-                </View>
-                <View style={styles.detailedStatItem}>
-                  <Text style={styles.detailedStatValue}>{userStats.streak}</Text>
-                  <Text style={styles.detailedStatLabel}>Current Streak</Text>
-                </View>
-              </View>
-              
-              <View style={styles.detailedStatsRow}>
-                <View style={styles.detailedStatItem}>
-                  <Text style={styles.detailedStatValue}>{userStats.longestStreak}</Text>
-                  <Text style={styles.detailedStatLabel}>Longest Streak</Text>
-                </View>
-                <View style={styles.detailedStatItem}>
-                  <Text style={styles.detailedStatValue}>{new Date(userStats.lastAttendance).toLocaleDateString()}</Text>
-                  <Text style={styles.detailedStatLabel}>Last Attendance</Text>
-                </View>
-              </View>
-            </>
-          )}
-        </RoundedCard>
-      )}
-      
-      {activeTab === 'calendar' && (
+      {activeTab === 'stats' ? (
+        <TamiratStats
+          stats={userStats}
+          onSeeAllStats={() => {/* Navigate to detailed stats */}}
+        />
+      ) : (
         <RoundedCard style={styles.calendarContainer}>
-          <Text style={styles.calendarTitle}>My Attendance History</Text>
+          <Text style={styles.calendarTitle}>Katılım Geçmişim</Text>
           
           {isLoading ? (
             <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
@@ -276,10 +222,10 @@ export default function HomeScreen() {
             <View style={styles.emptyCalendar}>
               <MaterialIcons name="event-busy" size={50} color="#ccc" />
               <Text style={styles.emptyCalendarText}>
-                No attendance history yet
+                Henüz katılım geçmişi yok
               </Text>
               <Text style={styles.emptyCalendarSubtext}>
-                Start attending protests to build your history
+                Tamirat etkinliklerine katılarak geçmişinizi oluşturun
               </Text>
             </View>
           )}
@@ -289,7 +235,7 @@ export default function HomeScreen() {
       <View style={styles.tipContainer}>
         <MaterialIcons name="tips-and-updates" size={24} color="#FFD700" />
         <Text style={styles.tipText}>
-          Remember to charge your phone and bring water to protests!
+          Tamirata giderken telefonunuzu şarj etmeyi ve su almayı unutmayın!
         </Text>
       </View>
     </ScrollView>
@@ -301,151 +247,75 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f8f8',
   },
-  welcomeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 15,
-    marginBottom: 10,
+  darkContainer: {
+    backgroundColor: '#121212',
   },
-  welcomeTextContainer: {
+  loadingContainer: {
     flex: 1,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  mascotImage: {
-    width: 70,
-    height: 70,
-  },
-  statsContainer: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    margin: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginVertical: 5,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  rankContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#ececec',
-    paddingTop: 15,
-  },
-  rankText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  rankValue: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  seeMoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  seeMoreText: {
-    fontSize: 14,
-    color: '#3498db',
-    marginRight: 5,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    margin: 10,
-    backgroundColor: '#222',
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  tabButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    backgroundColor: '#222',
+    alignItems: 'center',
   },
-  activeTabButton: {
-    backgroundColor: Colors.dark.tint,
+  loadingText: {
+    fontSize: 16,
+    color: '#1a1a1a',
+    marginTop: 10,
+  },
+  header: {
+    padding: 16,
+  },
+  darkHeader: {
+    backgroundColor: '#121212',
+  },
+  darkText: {
+    color: '#f0f0f0',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#e8e8e8',
+    borderRadius: 8,
+    padding: 4,
+  },
+  darkTabsContainer: {
+    backgroundColor: '#2a2a2a',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  darkTab: {
+    backgroundColor: 'transparent',
+  },
+  activeTab: {
+    backgroundColor: '#ffffff',
+  },
+  darkActiveTab: {
+    backgroundColor: '#363636',
   },
   tabText: {
-    marginLeft: 5,
-    color: '#aaa',
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#404040',
+  },
+  darkTabText: {
+    color: '#d0d0d0',
   },
   activeTabText: {
-    color: '#fff',
+    color: Colors.light.tint,
+    fontWeight: '700',
   },
-  detailedStatsContainer: {
-    margin: 10,
-    padding: 15,
-  },
-  detailedStatsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-  },
-  detailedStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  detailedStatItem: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    marginHorizontal: 5,
-  },
-  detailedStatValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  detailedStatLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 5,
+  darkActiveTabText: {
+    color: Colors.dark.tint,
+    fontWeight: '700',
   },
   calendarContainer: {
-    margin: 10,
-    padding: 15,
+    padding: 16,
   },
   calendarTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
-    color: '#333',
+    color: '#1a1a1a',
   },
   calendarGrid: {
     flexDirection: 'row',
@@ -496,18 +366,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tipContainer: {
-    backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    borderRadius: 10,
-    margin: 10,
-    marginBottom: 20,
+    backgroundColor: '#ffffff',
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   tipText: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 12,
     fontSize: 14,
-    color: '#555',
+    color: '#1a1a1a',
+    fontWeight: '500',
   },
 });

@@ -6,6 +6,13 @@ import { StyleSheet, View, Text } from 'react-native';
 
 import { Colors } from '../../constants/Colors';
 
+function TabBarIcon(props: {
+  name: React.ComponentProps<typeof MaterialIcons>['name'];
+  color: string;
+}) {
+  return <MaterialIcons size={28} style={{ marginBottom: -3 }} {...props} />;
+}
+
 export default function TabLayout() {
   // Using dark theme as required
   const colorScheme = 'dark';
@@ -13,7 +20,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.dark.tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarInactiveTintColor: Colors.dark.almostWhite,
         tabBarStyle: { 
           paddingBottom: 5,
@@ -51,37 +58,34 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Ana Sayfa',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="home" color={color} size={size} />
-          ),
-          headerTitle: 'arkalardayım anne',
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          headerTitle: 'Gompile',
+          headerTitleStyle: {
+            fontWeight: '600',
+            fontSize: 20,
+            color: Colors.dark.almostWhite,
+          },
         }}
       />
       <Tabs.Screen
         name="leaderboard"
         options={{
           title: 'Sıralama',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="leaderboard" color={color} size={size} />
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="leaderboard" color={color} />,
         }}
       />
       <Tabs.Screen
         name="announcements"
         options={{
           title: 'Haberler',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="megaphone" color={color} size={size} />
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="campaign" color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Ayarlar',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" color={color} size={size} />
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name="settings" color={color} />,
         }}
       />
     </Tabs>

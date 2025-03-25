@@ -51,10 +51,10 @@ export default function AnnouncementsScreen() {
       setIsLoading(true);
       
       // Get user's subscribed channels
-      const channelsResponse = await announcementService.getSubscribedChannels();
+      const subscribedChannels = await announcementService.getSubscribedChannels();
       
       // Get available channels for discovery
-      const availableChannelsResponse = await announcementService.searchChannels({
+      const { channels: availableChannels } = await announcementService.searchChannels({
         sortBy: 'subscriberCount',
         sortOrder: 'desc',
         limit: 20
@@ -62,13 +62,13 @@ export default function AnnouncementsScreen() {
       
       // Combine and mark subscribed channels
       const subscriptionsMap = new Map(
-        channelsResponse.channels.map(channel => [channel.id, true])
+        subscribedChannels.map((channel: Channel) => [channel.id, true])
       );
       
       const allChannels = [
-        ...channelsResponse.channels,
-        ...availableChannelsResponse.channels.filter(channel => !subscriptionsMap.has(channel.id))
-      ].map(channel => ({
+        ...subscribedChannels,
+        ...availableChannels.filter((channel: Channel) => !subscriptionsMap.has(channel.id))
+      ].map((channel: Channel) => ({
         ...channel,
         isSubscribed: subscriptionsMap.has(channel.id)
       }));
@@ -76,7 +76,7 @@ export default function AnnouncementsScreen() {
       setChannels(allChannels);
       
       // Get announcements
-      const announcementsResponse = await announcementService.getAnnouncements(50);
+      const { announcements } = await announcementService.getAnnouncements(50);
       
       // Create a channels map for quick lookup
       const channelsMap = new Map(
@@ -84,7 +84,7 @@ export default function AnnouncementsScreen() {
       );
       
       // Add channel name and read status to announcements
-      const enhancedAnnouncements = announcementsResponse.announcements.map(announcement => ({
+      const enhancedAnnouncements = announcements.map((announcement: Announcement) => ({
         ...announcement,
         channelName: channelsMap.get(announcement.channelId)?.name || 'Unknown Channel',
         isRead: false, // We'll track read status locally for now

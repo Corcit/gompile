@@ -323,7 +323,7 @@ export default function LeaderboardScreen() {
   const renderUserItem = ({ item, index }: { item: LeaderboardUser; index: number }) => {
     const isTopThree = index < 3 && leaderboardType === 'allTime';
     const avatarImage = item.avatar || getAvatarImage(item.avatarId);
-    const scoreType = leaderboardType === 'allTime' ? 'Total' : leaderboardType === 'weekly' ? 'Weekly' : 'Monthly';
+    const scoreType = leaderboardType === 'allTime' ? 'Toplam' : leaderboardType === 'weekly' ? 'Haftalık' : 'Aylık';
     
     // Wrap in Animated.View for top 3 performers
     const ItemWrapper = isTopThree ? Animated.View : View;
@@ -364,7 +364,7 @@ export default function LeaderboardScreen() {
                 color={isDark ? "#aaa" : "#666"} 
               />
               <Text style={[styles.statText, isDark && styles.darkSubText]}>
-                {item.protestsAttended || item.score} {scoreType} protests
+                {item.protestsAttended || item.score} {scoreType} eylem
               </Text>
             </View>
             {renderAchievementBadges(item.achievements)}
@@ -388,7 +388,7 @@ export default function LeaderboardScreen() {
     
     return (
       <View style={styles.userSection}>
-        <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Your Ranking</Text>
+        <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Sıralamanız</Text>
         <RoundedCard style={[styles.userItem, isDark && styles.darkUserItem]}>
           <View style={styles.rankContainer}>
             <Text style={[styles.rankText, isDark && styles.darkText]}>{userData.rank}</Text>
@@ -403,7 +403,7 @@ export default function LeaderboardScreen() {
                 color={isDark ? "#aaa" : "#666"} 
               />
               <Text style={[styles.statText, isDark && styles.darkSubText]}>
-                {userData.score} protests
+                {userData.score} eylem
               </Text>
             </View>
             {renderAchievementBadges(userData.achievements)}
@@ -418,8 +418,8 @@ export default function LeaderboardScreen() {
             <RoundedButton
               variant="primary"
               size="small"
-              title="Improve"
-              onPress={() => Alert.alert('Feature removed', 'This feature is no longer available.')}
+              title="Geliştir"
+              onPress={() => Alert.alert('Özellik kaldırıldı', 'Bu özellik artık mevcut değil.')}
               icon={<MaterialIcons name="trending-up" size={16} color="#fff" style={{ marginRight: 5 }} />}
             />
           </View>
@@ -433,14 +433,14 @@ export default function LeaderboardScreen() {
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors[colorScheme || 'light'].tint} />
-          <Text style={[styles.loadingText, isDark && styles.darkText]}>Loading leaderboard...</Text>
+          <Text style={[styles.loadingText, isDark && styles.darkText]}>Sıralama yükleniyor...</Text>
         </View>
       ) : (
         <>
           <View style={[styles.header, isDark && styles.darkHeader]}>
-            <Text style={[styles.headerTitle, isDark && styles.darkText]}>Activist Leaderboard</Text>
+            <Text style={[styles.headerTitle, isDark && styles.darkText]}>Tesisatçı Sıralaması</Text>
             <Text style={[styles.headerSubtitle, isDark && styles.darkSubText]}>
-              Top activists making a difference
+              Fark yaratan tesisatçılar
             </Text>
           </View>
 
@@ -453,7 +453,7 @@ export default function LeaderboardScreen() {
             />
             <TextInput
               style={[styles.searchInput, isDark && styles.darkSearchInput]}
-              placeholder="Find activists..."
+              placeholder="Tesisatçı ara..."
               placeholderTextColor={isDark ? "#aaa" : "#999"}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -486,7 +486,7 @@ export default function LeaderboardScreen() {
                   leaderboardType === 'allTime' && isDark && styles.darkActiveTabText
                 ]}
               >
-                All Time
+                Tüm Zamanlar
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -506,7 +506,7 @@ export default function LeaderboardScreen() {
                   leaderboardType === 'weekly' && isDark && styles.darkActiveTabText
                 ]}
               >
-                This Week
+                Bu Hafta
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -526,7 +526,7 @@ export default function LeaderboardScreen() {
                   leaderboardType === 'monthly' && isDark && styles.darkActiveTabText
                 ]}
               >
-                Monthly
+                Aylık
               </Text>
             </TouchableOpacity>
           </View>
@@ -547,9 +547,9 @@ export default function LeaderboardScreen() {
               }
               ListHeaderComponent={
                 <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-                  {leaderboardType === 'allTime' ? 'All Time Rankings' : 
-                   leaderboardType === 'weekly' ? 'This Week Rankings' : 
-                   'Monthly Rankings'}
+                  {leaderboardType === 'allTime' ? 'Tüm Zamanlar Sıralaması' : 
+                   leaderboardType === 'weekly' ? 'Bu Hafta Sıralaması' : 
+                   'Aylık Sıralama'}
                 </Text>
               }
               ListFooterComponent={renderUserSection}
@@ -562,10 +562,10 @@ export default function LeaderboardScreen() {
                 color={isDark ? "#555" : "#ddd"}
               />
               <Text style={[styles.emptyText, isDark && styles.darkText]}>
-                No activists found
+                Aktivist bulunamadı
               </Text>
               <Text style={[styles.emptySubtext, isDark && styles.darkSubText]}>
-                Try adjusting your search terms
+                Arama terimlerinizi değiştirmeyi deneyin
               </Text>
             </View>
           )}

@@ -23,6 +23,14 @@ export default function ExperienceScreen() {
   const [skipQuestion, setSkipQuestion] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const incrementCount = () => {
+    setProtestCount(prev => prev + 1);
+  };
+
+  const decrementCount = () => {
+    setProtestCount(prev => Math.max(0, prev - 1));
+  };
+
   const handleSliderChange = (value: number) => {
     setProtestCount(Math.round(value));
     if (skipQuestion) {
@@ -44,9 +52,6 @@ export default function ExperienceScreen() {
 
   const handleSkip = () => {
     setSkipQuestion(!skipQuestion);
-    if (!skipQuestion) {
-      setProtestCount(0);
-    }
   };
 
   const handleContinue = async () => {
@@ -91,9 +96,9 @@ export default function ExperienceScreen() {
       </View>
 
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Your Protest Experience</Text>
+        <Text style={styles.title}>Tamirat Deneyiminiz</Text>
         <Text style={styles.subtitle}>
-          Help us understand your level of activism
+          Tamirat deneyiminizi anlamamıza yardımcı olun
         </Text>
       </View>
 
@@ -102,44 +107,28 @@ export default function ExperienceScreen() {
       </View>
 
       {!skipQuestion ? (
-        <RoundedCard style={styles.experienceContainer}>
-          <Text style={styles.question}>
-            How many protests have you attended so far?
+        <RoundedCard style={styles.counterContainer}>
+          <Text style={styles.counterLabel}>
+            Kaç tamirata katıldınız?
           </Text>
 
-          <View style={styles.sliderContainer}>
-            <Slider
-              style={styles.slider}
-              minimumValue={0}
-              maximumValue={100}
-              step={1}
-              value={protestCount}
-              onValueChange={handleSliderChange}
-              minimumTrackTintColor={Colors.dark.secondary}
-              maximumTrackTintColor={Colors.dark.navyPurple}
-              thumbTintColor={Colors.dark.primary}
-            />
-            <View style={styles.sliderLabels}>
-              <Text style={styles.sliderLabel}>0</Text>
-              <Text style={styles.sliderLabel}>50</Text>
-              <Text style={styles.sliderLabel}>100+</Text>
-            </View>
-          </View>
+          <View style={styles.counterControls}>
+            <TouchableOpacity
+              style={[styles.counterButton, protestCount === 0 && styles.counterButtonDisabled]}
+              onPress={decrementCount}
+              disabled={protestCount === 0}
+            >
+              <MaterialIcons name="remove" size={24} color={protestCount === 0 ? Colors.dark.lightGray : Colors.dark.text} />
+            </TouchableOpacity>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Exact number:</Text>
-            <TextInput
-              style={[
-                styles.input,
-                { color: Colors.dark.text }
-              ]}
-              keyboardType="numeric"
-              value={protestCount.toString()}
-              onChangeText={handleInputChange}
-              maxLength={3}
-              placeholderTextColor={Colors.dark.placeholder}
-              selectionColor={Colors.dark.secondary}
-            />
+            <Text style={styles.counterValue}>{protestCount}</Text>
+
+            <TouchableOpacity
+              style={styles.counterButton}
+              onPress={incrementCount}
+            >
+              <MaterialIcons name="add" size={24} color={Colors.dark.text} />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.resultContainer}>
@@ -150,12 +139,12 @@ export default function ExperienceScreen() {
             />
             <Text style={styles.resultText}>
               {protestCount === 0
-                ? "You're just starting your activism journey!"
+                ? "Tamirat yolculuğunuza yeni başlıyorsunuz!"
                 : protestCount < 5
-                ? "You're an emerging activist!"
+                ? "Gelişmekte olan bir tesisatçısınız!"
                 : protestCount < 20
-                ? "You're an experienced activist!"
-                : "You're a veteran activist!"}
+                ? "Deneyimli bir tesisatçısınız!"
+                : "Usta tesisatçısınız!"}
             </Text>
           </View>
         </RoundedCard>
@@ -163,10 +152,10 @@ export default function ExperienceScreen() {
         <RoundedCard style={styles.skipContainer}>
           <MaterialIcons name="visibility-off" size={48} color={Colors.dark.lightGray} />
           <Text style={styles.skipText}>
-            You've chosen to skip this question.
+            Bu soruyu atlamayı seçtiniz.
           </Text>
           <Text style={styles.skipSubtext}>
-            You can always update this later in your profile.
+            Daha sonra profilinizden güncelleyebilirsiniz.
           </Text>
         </RoundedCard>
       )}
@@ -177,14 +166,14 @@ export default function ExperienceScreen() {
         activeOpacity={0.7}
       >
         <Text style={[styles.skipButtonText, skipQuestion && styles.skipButtonTextActive]}>
-          {skipQuestion ? 'Answer Question' : 'Skip Question'}
+          {skipQuestion ? 'Soruyu Yanıtla' : 'Soruyu Atla'}
         </Text>
       </TouchableOpacity>
 
       <RoundedCard style={styles.tip}>
         <MaterialIcons name="lightbulb" size={20} color={Colors.dark.secondary} />
         <Text style={styles.tipText}>
-          New to protests? Track your progress as you participate in more actions!
+          Tamirat konusunda yeni misiniz? Daha fazla etkinliğe katıldıkça ilerlemenizi takip edin!
         </Text>
       </RoundedCard>
 
@@ -252,53 +241,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  experienceContainer: {
+  counterContainer: {
     flex: 1,
     marginBottom: 20,
     padding: 16,
     backgroundColor: Colors.dark.card,
   },
-  question: {
+  counterLabel: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 20,
     color: Colors.dark.text,
   },
-  sliderContainer: {
-    marginBottom: 20,
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  sliderLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-  },
-  sliderLabel: {
-    color: Colors.dark.lightGray,
-    fontSize: 14,
-  },
-  inputContainer: {
+  counterControls: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
   },
-  inputLabel: {
-    fontSize: 16,
-    marginRight: 10,
-    color: Colors.dark.text,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    borderRadius: 8,
+  counterButton: {
     padding: 10,
-    width: 70,
-    fontSize: 16,
-    textAlign: 'center',
+    borderRadius: 8,
+    marginHorizontal: 5,
+  },
+  counterButtonDisabled: {
     backgroundColor: Colors.dark.navyPurple,
+  },
+  counterValue: {
+    fontSize: 16,
+    marginHorizontal: 10,
+    color: Colors.dark.text,
   },
   resultContainer: {
     flexDirection: 'row',
