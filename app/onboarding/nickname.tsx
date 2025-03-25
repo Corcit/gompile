@@ -8,7 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Alert
+  Alert,
+  ScrollView
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +29,7 @@ export default function NicknameScreen() {
   const [nicknameError, setNicknameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [footerHeight, setFooterHeight] = useState(80); // Default height estimation
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
@@ -105,7 +107,7 @@ export default function NicknameScreen() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 30 : 0}
       >
         <SafeAreaView style={styles.container}>
           <View style={styles.header}>
@@ -127,7 +129,12 @@ export default function NicknameScreen() {
             <Mascot expression="thinking" size="small" />
           </View>
 
-          <View style={styles.content}>
+          <ScrollView 
+            style={[styles.scrollView, { marginBottom: footerHeight }]}
+            contentContainerStyle={styles.scrollContentContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <Text style={styles.title}>
               Create your activist profile
             </Text>
@@ -147,7 +154,7 @@ export default function NicknameScreen() {
               error={nicknameError}
               autoCapitalize="none"
               returnKeyType="next"
-              leftIcon={<Ionicons name="person" size={20} color={Colors.dark.lightGray} />}
+              leftIcon={<Ionicons name="person" size={20} color={Colors.dark.textSecondary} />}
             />
 
             <RoundedInput
@@ -158,13 +165,13 @@ export default function NicknameScreen() {
               secureTextEntry={!showPassword}
               error={passwordError}
               returnKeyType="next"
-              leftIcon={<Ionicons name="lock-closed" size={20} color={Colors.dark.lightGray} />}
+              leftIcon={<Ionicons name="lock-closed" size={20} color={Colors.dark.textSecondary} />}
               rightIcon={
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Ionicons
                     name={showPassword ? "eye-off" : "eye"}
                     size={20}
-                    color={Colors.dark.lightGray}
+                    color={Colors.dark.textSecondary}
                   />
                 </TouchableOpacity>
               }
@@ -178,28 +185,36 @@ export default function NicknameScreen() {
               secureTextEntry={!showPassword}
               error={passwordError ? "" : confirmPassword && password !== confirmPassword ? "Passwords do not match" : ""}
               returnKeyType="done"
-              leftIcon={<Ionicons name="lock-closed" size={20} color={Colors.dark.lightGray} />}
+              leftIcon={<Ionicons name="lock-closed" size={20} color={Colors.dark.textSecondary} />}
             />
 
             <RoundedCard style={styles.tipContainer}>
-              <Ionicons name="information-circle" size={22} color={Colors.dark.info} />
+              <Ionicons name="information-circle" size={22} color={Colors.dark.blue} />
               <Text style={styles.tipText}>
                 Choose a memorable nickname and strong password. Your nickname will be visible to other activists.
               </Text>
             </RoundedCard>
-          </View>
+          </ScrollView>
 
-          <View style={styles.footer}>
-            <RoundedButton
-              title="Continue"
-              onPress={handleContinue}
-              disabled={!isFormValid}
-              loading={loading}
-              variant="primary"
-              size="large"
-              style={styles.continueButton}
-              icon={<Ionicons name="arrow-forward" size={20} color={Colors.dark.text} style={{ marginLeft: 8 }} />}
-            />
+          <View 
+            style={styles.footer}
+            onLayout={(event) => {
+              const { height } = event.nativeEvent.layout;
+              setFooterHeight(height);
+            }}
+          >
+            <View style={styles.buttonContainer}>
+              <RoundedButton
+                title="Continue"
+                onPress={handleContinue}
+                disabled={!isFormValid}
+                loading={loading}
+                variant="primary"
+                size="large"
+                style={styles.continueButton}
+                icon={<Ionicons name="arrow-forward" size={20} color={Colors.dark.text} style={{ marginLeft: 8 }} />}
+              />
+            </View>
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -213,11 +228,17 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: Colors.dark.background,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    paddingBottom: 20,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   backButton: {
     padding: 8,
@@ -234,47 +255,55 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: Colors.dark.secondary,
+    backgroundColor: Colors.dark.yellowGold,
     width: 20,
   },
   mascotContainer: {
     alignItems: 'center',
     marginBottom: 20,
   },
-  content: {
-    flex: 1,
-  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
     color: Colors.dark.text,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 30,
-    lineHeight: 22,
-    color: Colors.dark.lightGray,
+    color: Colors.dark.textSecondary,
+    marginBottom: 24,
+    textAlign: 'center',
   },
   tipContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    marginTop: 20,
+    padding: 12,
+    marginTop: 16,
     backgroundColor: Colors.dark.navyPurple,
   },
   tipText: {
-    fontSize: 14,
-    marginLeft: 10,
     flex: 1,
-    lineHeight: 20,
-    color: Colors.dark.lightGray,
+    marginLeft: 8,
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
   },
   footer: {
-    marginTop: 'auto',
-    paddingTop: 20,
+    width: '100%',
+    padding: 16,
+    backgroundColor: Colors.dark.background,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   continueButton: {
-    width: '100%',
+    width: '90%',
+    backgroundColor: Colors.dark.yellowGold,
   },
 }); 
