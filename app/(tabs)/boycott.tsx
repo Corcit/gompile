@@ -90,24 +90,38 @@ export default function BoycottScreen() {
     </TouchableOpacity>
   );
 
-  const renderCategoryItem = ({ item }: { item: string }) => (
-    <TouchableOpacity
-      style={[
-        styles.categoryChip,
-        selectedCategory === item && styles.selectedCategoryChip
-      ]}
-      onPress={() => handleCategorySelect(item)}
-    >
-      <Text 
+  const renderCategoryItem = ({ item }: { item: string }) => {
+    // Helper function to get friendly category name
+    const getCategoryDisplayName = (category: string) => {
+      const categoryMap: {[key: string]: string} = {
+        'gıda': 'Gıda',
+        'teknoloji': 'Teknoloji',
+        'giyim': 'Giyim',
+        'enerji': 'Enerji',
+        'tarım': 'Tarım'
+      };
+      return categoryMap[category] || category.charAt(0).toUpperCase() + category.slice(1);
+    };
+    
+    return (
+      <TouchableOpacity
         style={[
-          styles.categoryText,
-          selectedCategory === item && styles.selectedCategoryText
+          styles.categoryChip,
+          selectedCategory === item && styles.selectedCategoryChip
         ]}
+        onPress={() => handleCategorySelect(item)}
       >
-        {item.charAt(0).toUpperCase() + item.slice(1)}
-      </Text>
-    </TouchableOpacity>
-  );
+        <Text 
+          style={[
+            styles.categoryText,
+            selectedCategory === item && styles.selectedCategoryText
+          ]}
+        >
+          {getCategoryDisplayName(item)}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -252,17 +266,20 @@ const styles = StyleSheet.create({
   },
   categoryChip: {
     backgroundColor: Colors.dark.cardBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 16,
-    marginRight: 8,
+    marginRight: 10,
+    minWidth: 80,
+    alignItems: 'center',
   },
   selectedCategoryChip: {
     backgroundColor: Colors.dark.tint,
   },
   categoryText: {
     color: Colors.dark.text,
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: '500',
   },
   selectedCategoryText: {
     color: '#fff',
