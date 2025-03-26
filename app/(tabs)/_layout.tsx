@@ -75,6 +75,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="boycott"
+        options={{
+          title: 'Daha da Gelmem',
+          tabBarIcon: ({ color }) => <TabBarIcon name="block" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="announcements"
         options={{
           title: 'Haberler',

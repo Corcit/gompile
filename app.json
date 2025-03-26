@@ -8,8 +8,13 @@
     "scheme": "gompile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "sdkVersion": "52.0.0",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.coruh.gompile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -36,6 +41,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0ed2b734-777c-4b3a-93f2-195213e654e9"
+      }
     }
   }
 }
