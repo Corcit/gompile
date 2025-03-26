@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import Colors from '../../constants/Colors';
+import { Colors } from '../../constants/Colors';
 import { BoycottCompany, BoycottSearchParams } from '../../services/api/models/BoycottCompany';
 import BoycottService from '../../services/api/services/boycottService';
 
 export default function BoycottScreen() {
+  // Using dark theme as required by the app
+  const colorScheme = 'dark';
+  const colors = Colors[colorScheme];
+  
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -78,11 +82,11 @@ export default function BoycottScreen() {
       <View style={styles.companyInfo}>
         <Text style={styles.companyName}>{item.name}</Text>
         <Text style={styles.companyCategory}>
-          <Ionicons name="pricetag-outline" size={14} color={Colors.text} /> {item.category}
+          <Ionicons name="pricetag-outline" size={14} color={colors.text} /> {item.category}
         </Text>
         <Text style={styles.companyReason} numberOfLines={2}>{item.reason}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={24} color={Colors.tint} />
+      <Ionicons name="chevron-forward" size={24} color={colors.tint} />
     </TouchableOpacity>
   );
 
@@ -114,11 +118,11 @@ export default function BoycottScreen() {
 
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color={Colors.text} style={styles.searchIcon} />
+          <Ionicons name="search" size={20} color={colors.text} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Marka ara..."
-            placeholderTextColor={Colors.text + '80'}
+            placeholderTextColor={colors.text + '80'}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={searchCompanies}
@@ -131,7 +135,7 @@ export default function BoycottScreen() {
                 searchCompanies();
               }}
             >
-              <Ionicons name="close-circle" size={20} color={Colors.text} />
+              <Ionicons name="close-circle" size={20} color={colors.text} />
             </TouchableOpacity>
           )}
         </View>
@@ -161,7 +165,7 @@ export default function BoycottScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.tint} />
+          <ActivityIndicator size="large" color={colors.tint} />
         </View>
       ) : (
         <FlatList
@@ -171,7 +175,7 @@ export default function BoycottScreen() {
           contentContainerStyle={styles.companiesList}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={48} color={Colors.text + '40'} />
+              <Ionicons name="search-outline" size={48} color={colors.text + '40'} />
               <Text style={styles.emptyText}>Sonuç bulunamadı</Text>
               <Text style={styles.emptySubtext}>Farklı arama terimleri deneyin veya filtreleri temizleyin</Text>
             </View>
@@ -185,7 +189,7 @@ export default function BoycottScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.dark.background,
   },
   header: {
     paddingHorizontal: 16,
@@ -195,12 +199,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.dark.text,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.text + '80',
+    color: Colors.dark.text + '80',
     marginBottom: 16,
   },
   searchContainer: {
@@ -213,7 +217,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.dark.cardBackground,
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 44,
@@ -223,12 +227,12 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: Colors.text,
+    color: Colors.dark.text,
     height: '100%',
   },
   searchButton: {
     marginLeft: 12,
-    backgroundColor: Colors.tint,
+    backgroundColor: Colors.dark.tint,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 8,
@@ -247,17 +251,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   categoryChip: {
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.dark.cardBackground,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     marginRight: 8,
   },
   selectedCategoryChip: {
-    backgroundColor: Colors.tint,
+    backgroundColor: Colors.dark.tint,
   },
   categoryText: {
-    color: Colors.text,
+    color: Colors.dark.text,
     fontSize: 13,
   },
   selectedCategoryText: {
@@ -268,7 +272,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   resultsText: {
-    color: Colors.text + '80',
+    color: Colors.dark.text + '80',
     fontSize: 13,
   },
   companiesList: {
@@ -276,7 +280,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   companyCard: {
-    backgroundColor: Colors.cardBackground,
+    backgroundColor: Colors.dark.cardBackground,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -288,6 +292,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 8,
     marginRight: 16,
+    backgroundColor: '#fff',
   },
   companyInfo: {
     flex: 1,
@@ -295,17 +300,17 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.dark.text,
     marginBottom: 4,
   },
   companyCategory: {
     fontSize: 12,
-    color: Colors.text + '80',
+    color: Colors.dark.text + '80',
     marginBottom: 4,
   },
   companyReason: {
     fontSize: 13,
-    color: Colors.text,
+    color: Colors.dark.text,
   },
   loadingContainer: {
     flex: 1,
@@ -320,13 +325,13 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.dark.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: Colors.text + '80',
+    color: Colors.dark.text + '80',
     textAlign: 'center',
   },
 }); 
