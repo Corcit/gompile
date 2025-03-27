@@ -77,7 +77,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="boycott"
         options={{
-          title: 'Daha da Gelmem',
+          title: 'Boykot',
           tabBarIcon: ({ color }) => <TabBarIcon name="block" color={color} />,
         }}
       />

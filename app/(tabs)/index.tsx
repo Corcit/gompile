@@ -10,6 +10,7 @@ import {
   Dimensions,
   ActivityIndicator,
   RefreshControl,
+  Linking,
 } from 'react-native';
 import { MaterialIcons, Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -135,6 +136,14 @@ export default function HomeScreen() {
     );
   };
 
+  const openWebsite = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error('Error opening URL:', error);
+    }
+  };
+
   if (isLoading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
@@ -158,6 +167,25 @@ export default function HomeScreen() {
         />
       }
     >
+      {/* Location Buttons */}
+      <View style={styles.locationButtonsContainer}>
+        <TouchableOpacity
+          style={[styles.locationButton, { backgroundColor: Colors.light.error }]}
+          onPress={() => openWebsite('https://halkharita.com')}
+        >
+          <MaterialIcons name="location-on" size={24} color="white" />
+          <Text style={styles.locationButtonText}>Gözaltı Kremi Lokasyonları</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.locationButton, { backgroundColor: Colors.light.tint }]}
+          onPress={() => openWebsite('https://ozgurlukharitasi.com')}
+        >
+          <MaterialIcons name="map" size={24} color="white" />
+          <Text style={styles.locationButtonText}>Tamirat Lokasyonları</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={[styles.header, isDark && styles.darkHeader]}>
         <View style={[styles.tabsContainer, isDark && styles.darkTabsContainer]}>
           <TouchableOpacity
@@ -231,13 +259,6 @@ export default function HomeScreen() {
           )}
         </RoundedCard>
       )}
-
-      <View style={styles.tipContainer}>
-        <MaterialIcons name="tips-and-updates" size={24} color="#FFD700" />
-        <Text style={styles.tipText}>
-          Tamirata giderken telefonunuzu şarj etmeyi ve su almayı unutmayın!
-        </Text>
-      </View>
     </ScrollView>
   );
 }
@@ -365,28 +386,28 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: 'center',
   },
-  tipContainer: {
+  locationButtonsContainer: {
+    padding: 16,
+    gap: 12,
+  },
+  locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
     padding: 16,
-    marginHorizontal: 16,
-    marginTop: 16,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
   },
-  tipText: {
-    flex: 1,
+  locationButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
     marginLeft: 12,
-    fontSize: 14,
-    color: '#1a1a1a',
-    fontWeight: '500',
   },
 });

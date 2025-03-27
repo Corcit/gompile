@@ -40,20 +40,16 @@ export interface UserStats {
  * Represents a user's application settings
  */
 export interface UserSettings {
-  notifications: {
+  notifications?: {
     enabled: boolean;
-  };
-  quietHours: {
-    enabled: boolean;
-    start: string;
-    end: string;
-  };
-  profile: {
-    nickname: string;
-    avatarId: string;
-    avatarUrl?: string;
   };
   showOnLeaderboard?: boolean;
+  nickname?: string;
+  email?: string;
+  avatar?: {
+    id: string;
+    url: string;
+  };
 }
 
 export type ExtendedUserSettings = UserSettings;
@@ -65,14 +61,11 @@ export const createDefaultUserSettings = (): UserSettings => ({
   notifications: {
     enabled: true,
   },
-  quietHours: {
-    enabled: false,
-    start: '22:00',
-    end: '08:00',
-  },
-  profile: {
-    nickname: '',
-    avatarId: '',
-  },
   showOnLeaderboard: true,
+  nickname: '',
+  email: '',
+  avatar: {
+    id: '',
+    url: ''
+  }
 }); 

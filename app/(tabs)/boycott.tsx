@@ -126,7 +126,7 @@ export default function BoycottScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Daha da Gelmem</Text>
+        <Text style={styles.title}>Boykot</Text>
         <Text style={styles.subtitle}>Tamirat sırasında boykot edilen markalar</Text>
       </View>
 
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: Colors.dark.card,
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 44,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   categoryChip: {
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: Colors.dark.card,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   companyCard: {
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: Colors.dark.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   companyCategory: {
     fontSize: 12,
-    color: Colors.dark.text + '80',
+    color: Colors.dark.text,
     marginBottom: 4,
   },
   companyReason: {

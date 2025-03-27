@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+
+const TIPS = [
+  "Tamirata giderken telefonunuzu şarj etmeyi ve su almayı unutmayın!",
+  "Tamirat sırasında sıcağa dayanıklı eldiven veya örgü eldiven kullanmayı ihmal etmeyin!",
+  "Tamirat öncesi talsit hazırlamayı unutmayın, gözlerin yaşarmasın.",
+  "Tamiratta 2-3 kişilik gruplar halinde birbirinizi kaybetmeden durmayı unutmayın.",
+  "Acil durumlar için yakınlarınıza konum atmayı unutmayın!",
+  "Bulabildiğiniz en ucuz deniz gözlüğünü yanınıza aldığınızdan emin olun.",
+  "Tamirata giderken rahat ve hızlı hareket edebileceğiniz kıyafetler giyin."
+];
 
 interface TamiratStatsProps {
   stats: {
@@ -20,9 +30,30 @@ interface TamiratStatsProps {
 export default function TamiratStats({ stats, onSeeAllStats }: TamiratStatsProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTipIndex((prevIndex) => (prevIndex + 1) % TIPS.length);
+    }, 5000); // Rotate tips every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.container}>
+      <View style={[styles.tipContainer, isDark && styles.darkTipContainer]}>
+        <MaterialIcons
+          name="lightbulb"
+          size={24}
+          color={isDark ? Colors.dark.text : Colors.light.text}
+          style={styles.tipIcon}
+        />
+        <Text style={[styles.tipText, isDark && styles.darkText]}>
+          {TIPS[currentTipIndex]}
+        </Text>
+      </View>
+
       <Text style={[styles.title, isDark && styles.darkText]}>
         Tamirat İstatistiklerin
       </Text>
@@ -86,67 +117,6 @@ export default function TamiratStats({ stats, onSeeAllStats }: TamiratStatsProps
           </TouchableOpacity>
         )}
       </View>
-
-      <View style={styles.detailedStats}>
-        <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
-          Detaylı İstatistikler
-        </Text>
-        <View style={styles.statsGrid}>
-          <View style={[styles.statsCard, isDark && styles.darkStatsCard]}>
-            <Text style={styles.statsValue}>
-              {stats.protestsAttended}
-            </Text>
-            <Text style={styles.statsLabel}>
-              Toplam Tamirat
-            </Text>
-          </View>
-
-          <View style={[styles.statsCard, isDark && styles.darkStatsCard]}>
-            <Text style={styles.statsValue}>
-              {stats.verifiedAttendances}
-            </Text>
-            <Text style={styles.statsLabel}>
-              Onaylanmış
-            </Text>
-          </View>
-
-          <View style={[styles.statsCard, isDark && styles.darkStatsCard]}>
-            <Text style={styles.statsValue}>
-              {stats.totalHours}s
-            </Text>
-            <Text style={styles.statsLabel}>
-              Toplam Saat
-            </Text>
-          </View>
-
-          <View style={[styles.statsCard, isDark && styles.darkStatsCard]}>
-            <Text style={styles.statsValue}>
-              {stats.streak}
-            </Text>
-            <Text style={styles.statsLabel}>
-              Mevcut Seri
-            </Text>
-          </View>
-
-          <View style={[styles.statsCard, isDark && styles.darkStatsCard]}>
-            <Text style={styles.statsValue}>
-              {stats.longestStreak}
-            </Text>
-            <Text style={styles.statsLabel}>
-              En Uzun Seri
-            </Text>
-          </View>
-
-          <View style={[styles.statsCard, isDark && styles.darkStatsCard]}>
-            <Text style={styles.statsValue}>
-              {new Date(stats.lastAttendance).toLocaleDateString('tr-TR')}
-            </Text>
-            <Text style={styles.statsLabel}>
-              Son Katılım
-            </Text>
-          </View>
-        </View>
-      </View>
     </View>
   );
 }
@@ -207,51 +177,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  detailedStats: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#ffffff',
-  },
-  statsGrid: {
+  tipContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  statsCard: {
-    width: '48%',
-    backgroundColor: '#1e1e1e',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
     padding: 16,
+    marginBottom: 20,
     borderRadius: 12,
-    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
-    borderWidth: 1,
-    borderColor: '#333',
   },
-  darkStatsCard: {
-    backgroundColor: '#2a2a2a',
-    borderColor: '#404040',
+  darkTipContainer: {
+    backgroundColor: '#1e1e1e',
   },
-  statsValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#ffffff',
+  tipIcon: {
+    marginRight: 12,
   },
-  statsLabel: {
-    fontSize: 16,
-    color: '#cccccc',
+  tipText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1a1a1a',
     fontWeight: '500',
   },
 }); 

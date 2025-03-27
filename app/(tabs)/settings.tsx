@@ -21,6 +21,7 @@ import RoundedButton from '../../components/ui/RoundedButton';
 import { useUserService } from '../../services/api/hooks/useUserService';
 import { UserSettings } from '../../services/api/models/UserProfile';
 import EditProfileModal from '../../components/settings/EditProfileModal';
+import PrivacyPolicyModal from '../../components/settings/PrivacyPolicyModal';
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
@@ -31,6 +32,7 @@ export default function SettingsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditProfileModalVisible, setIsEditProfileModalVisible] = useState(false);
+  const [isPrivacyPolicyVisible, setIsPrivacyPolicyVisible] = useState(false);
   
   useEffect(() => {
     loadUserSettings();
@@ -81,26 +83,7 @@ export default function SettingsScreen() {
       await userService.updateSettings(updatedSettings);
       setSettings(updatedSettings);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update notification settings');
-    }
-  };
-  
-  const handleToggleQuietHours = async (enabled: boolean) => {
-    if (!settings) return;
-    
-    try {
-      const updatedSettings = {
-        ...settings,
-        quietHours: {
-          ...settings?.quietHours,
-          enabled
-        }
-      };
-      
-      await userService.updateSettings(updatedSettings);
-      setSettings(updatedSettings);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update quiet hours settings');
+      Alert.alert('Hata', 'Bildirim ayarları güncellenirken bir hata oluştu');
     }
   };
   
@@ -164,32 +147,22 @@ export default function SettingsScreen() {
   // Handle reset data
   const handleResetData = () => {
     Alert.alert(
-      'Reset All Data',
-      'This will erase all your app data including attendance history and preferences. This action cannot be undone.',
+      'Tüm Verileri Sıfırla',
+      'Bu işlem, katılım geçmişi ve tercihler dahil tüm uygulama verilerinizi silecektir. Bu işlem geri alınamaz.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'İptal', style: 'cancel' },
         {
-          text: 'Reset',
+          text: 'Sıfırla',
           style: 'destructive',
           onPress: async () => {
             try {
               setIsSaving(true);
-              
-              // Clear local storage
               await AsyncStorage.clear();
-              
-              // In a real implementation, we would call resetUserData method
-              // This is a placeholder until the API method is implemented
-              // await userService.resetUserData();
-              
-              // Reload settings
               await loadUserSettings();
-              
-              // Notify the user
-              Alert.alert('Data Reset', 'All data has been reset successfully');
+              Alert.alert('Veriler Sıfırlandı', 'Tüm veriler başarıyla sıfırlandı');
             } catch (error) {
               console.error('Error resetting data:', error);
-              Alert.alert('Error', 'Failed to reset data. Please try again.');
+              Alert.alert('Hata', 'Veriler sıfırlanırken bir hata oluştu. Lütfen tekrar deneyin.');
             } finally {
               setIsSaving(false);
             }
@@ -201,220 +174,168 @@ export default function SettingsScreen() {
 
   if (isLoading || !settings) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
-      {isSaving && (
-        <View style={styles.savingOverlay}>
-          <ActivityIndicator size="large" color={Colors[colorScheme || 'light'].tint} />
-          <Text style={[styles.savingText, isDark && styles.darkText]}>Saving changes...</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={[styles.title, isDark && styles.darkText]}>Ayarlar</Text>
         </View>
-      )}
-      
-      <ScrollView 
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={[styles.title, isDark && styles.darkText]}>
-          Settings
-        </Text>
 
-        {/* Profile Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkSectionTitle]}>Profile</Text>
-          <RoundedCard style={[styles.profileCard, isDark && styles.darkCard]}>
-            <View style={styles.avatarContainer}>
-              {settings?.profile?.avatarUrl ? (
-                <Image 
-                  source={{ uri: settings?.profile?.avatarUrl }} 
-                  style={styles.avatarImage} 
-                />
-              ) : (
-                <View style={[styles.avatar, isDark && styles.darkAvatar]}>
-                  <Text style={styles.avatarInitial}>
-                    {settings?.profile?.nickname?.charAt(0) || 'U'}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={[styles.nicknameLarge, isDark && styles.darkText]}>
-                {settings?.profile?.nickname || 'User'}
+        {/* Profil Bölümü */}
+        <RoundedCard style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Profil</Text>
+          <View style={styles.profileInfo}>
+            <Image
+              source={settings?.avatar?.url ? { uri: settings.avatar.url } : require('../../assets/images/avatar1.png')}
+              style={styles.avatar}
+              defaultSource={require('../../assets/images/avatar1.png')}
+            />
+            <View style={styles.profileText}>
+              <Text style={[styles.nickname, isDark && styles.darkText]}>
+                {settings?.nickname || 'İsimsiz Kullanıcı'}
               </Text>
-              <RoundedButton
-                variant="outline"
-                size="small"
-                title="Edit Profile"
-                onPress={handleEditProfile}
-              />
+              <Text style={[styles.email, isDark && styles.darkSubText]}>
+                E-posta yok
+              </Text>
             </View>
-          </RoundedCard>
-        </View>
-
-        {/* Notification Preferences */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkSectionTitle]}>Notifications</Text>
+          </View>
           
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Enable Notifications
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                Receive updates from subscribed channels
-              </Text>
+          <TouchableOpacity
+            style={[styles.editButton, { backgroundColor: isDark ? Colors.dark.card : Colors.light.card }]}
+            onPress={handleEditProfile}
+          >
+            <Text style={[styles.editButtonText, isDark && styles.darkText]}>Profili Düzenle</Text>
+          </TouchableOpacity>
+        </RoundedCard>
+
+        {/* Bildirimler Bölümü */}
+        <RoundedCard style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Bildirimler</Text>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <MaterialIcons
+                name="notifications"
+                size={24}
+                color={isDark ? Colors.dark.text : Colors.light.text}
+                style={styles.settingIcon}
+              />
+              <View>
+                <Text style={[styles.settingText, isDark && styles.darkText]}>
+                  Bildirimleri Etkinleştir
+                </Text>
+                <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
+                  Tamirat ve etkinlik bildirimlerini al
+                </Text>
+              </View>
             </View>
             <Switch
               value={settings?.notifications?.enabled}
-              onValueChange={(value) => handleUpdateNotifications(value)}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
+              onValueChange={handleUpdateNotifications}
+              trackColor={{ false: Colors.dark.border, true: Colors.light.tint }}
+              thumbColor={settings?.notifications?.enabled ? Colors.light.background : Colors.dark.text}
             />
-          </RoundedCard>
-        </View>
+          </View>
+        </RoundedCard>
 
-        {/* Privacy Settings */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkSectionTitle]}>Privacy</Text>
-          
-          <RoundedCard style={[styles.settingItem, isDark && styles.darkCard]}>
-            <View style={styles.settingTextContainer}>
-              <Text style={[styles.settingLabel, isDark && styles.darkText]}>
-                Show on Leaderboard
-              </Text>
-              <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
-                Your nickname will be visible to others
-              </Text>
+        {/* Gizlilik Bölümü */}
+        <RoundedCard style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Gizlilik</Text>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <MaterialIcons
+                name="leaderboard"
+                size={24}
+                color={isDark ? Colors.dark.text : Colors.light.text}
+                style={styles.settingIcon}
+              />
+              <View>
+                <Text style={[styles.settingText, isDark && styles.darkText]}>
+                  Sıralamada Göster
+                </Text>
+                <Text style={[styles.settingDescription, isDark && styles.darkSubText]}>
+                  Profilinizi sıralama listesinde göster
+                </Text>
+              </View>
             </View>
             <Switch
               value={settings?.showOnLeaderboard}
               onValueChange={(value) => togglePrivacySetting('showOnLeaderboard', value)}
-              trackColor={{ 
-                false: isDark ? '#444' : '#767577', 
-                true: Colors[colorScheme || 'light'].tint 
-              }}
-              thumbColor={'#f4f3f4'}
-            />
-          </RoundedCard>
-        </View>
-
-        {/* Additional Options */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkSectionTitle]}>More</Text>
-          
-          <RoundedCard style={[styles.actionItemCard, isDark && styles.darkCard]}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => Alert.alert('Request Channel', 'This would open the channel request form.')}
-            >
-              <Ionicons 
-                name="add-circle-outline" 
-                size={24} 
-                color={isDark ? Colors.dark.tint : Colors.light.tint} 
-                style={styles.actionIcon}
-              />
-              <Text style={[styles.actionButtonText, isDark && styles.darkText]}>
-                Request New Channel
-              </Text>
-            </TouchableOpacity>
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.actionItemCard, isDark && styles.darkCard]}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => Alert.alert('Help & Support', 'This would open the help center.')}
-            >
-              <MaterialIcons 
-                name="help-outline" 
-                size={24} 
-                color={isDark ? Colors.dark.tint : Colors.light.tint}
-                style={styles.actionIcon} 
-              />
-              <Text style={[styles.actionButtonText, isDark && styles.darkText]}>
-                Help & Support
-              </Text>
-            </TouchableOpacity>
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.actionItemCard, isDark && styles.darkCard]}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => Alert.alert('Terms of Service', 'This would show the terms of service.')}
-            >
-              <Ionicons 
-                name="document-text-outline" 
-                size={24} 
-                color={isDark ? Colors.dark.tint : Colors.light.tint}
-                style={styles.actionIcon} 
-              />
-              <Text style={[styles.actionButtonText, isDark && styles.darkText]}>
-                Terms of Service
-              </Text>
-            </TouchableOpacity>
-          </RoundedCard>
-          
-          <RoundedCard style={[styles.actionItemCard, isDark && styles.darkCard]}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => Alert.alert('Privacy Policy', 'This would show the privacy policy.')}
-            >
-              <Ionicons 
-                name="shield-outline" 
-                size={24} 
-                color={isDark ? Colors.dark.tint : Colors.light.tint}
-                style={styles.actionIcon} 
-              />
-              <Text style={[styles.actionButtonText, isDark && styles.darkText]}>
-                Privacy Policy
-              </Text>
-            </TouchableOpacity>
-          </RoundedCard>
-        </View>
-
-        {/* Account Actions */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkSectionTitle]}>Account</Text>
-          
-          <View style={styles.accountActions}>
-            <RoundedButton
-              variant="outline"
-              title="Sign Out"
-              onPress={handleSignOut}
-              style={styles.accountButton}
-              icon={<Ionicons name="log-out-outline" size={18} color={isDark ? "#fff" : "#333"} style={{ marginRight: 5 }} />}
-            />
-            
-            <RoundedButton
-              variant="danger"
-              title="Reset Data"
-              onPress={handleResetData}
-              style={styles.accountButton}
-              icon={<MaterialIcons name="delete-outline" size={18} color="#fff" style={{ marginRight: 5 }} />}
+              trackColor={{ false: Colors.dark.border, true: Colors.light.tint }}
+              thumbColor={settings?.showOnLeaderboard ? Colors.light.background : Colors.dark.text}
             />
           </View>
-        </View>
-        
-        {/* Version info */}
-        <Text style={[styles.versionInfo, isDark && styles.darkSubText]}>
-          Version 1.0.0 (Build 100)
-        </Text>
+        </RoundedCard>
+
+        {/* Hesap Bölümü */}
+        <RoundedCard style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Hesap</Text>
+          
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={() => setIsPrivacyPolicyVisible(true)}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialIcons
+                name="privacy-tip"
+                size={24}
+                color={isDark ? Colors.dark.text : Colors.light.text}
+                style={styles.settingIcon}
+              />
+              <Text style={[styles.settingText, isDark && styles.darkText]}>
+                Gizlilik Politikası
+              </Text>
+            </View>
+            <MaterialIcons
+              name="chevron-right"
+              size={24}
+              color={isDark ? Colors.dark.text : Colors.light.text}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.signOutButton]}
+            onPress={handleSignOut}
+          >
+            <MaterialIcons
+              name="logout"
+              size={24}
+              color={Colors.light.error}
+            />
+            <Text style={styles.actionButtonText}>Çıkış Yap</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.resetButton]}
+            onPress={handleResetData}
+          >
+            <MaterialIcons
+              name="delete-forever"
+              size={24}
+              color={Colors.light.error}
+            />
+            <Text style={styles.actionButtonText}>Tüm Verileri Sıfırla</Text>
+          </TouchableOpacity>
+        </RoundedCard>
       </ScrollView>
-      
+
       <EditProfileModal
         visible={isEditProfileModalVisible}
         onClose={() => setIsEditProfileModalVisible(false)}
         onSave={handleSaveProfile}
-        currentNickname={settings?.profile?.nickname || ''}
-        currentAvatarId={settings?.profile?.avatarUrl?.split('/').pop()?.split('.')[0] || ''}
+        initialNickname={settings?.nickname}
+        initialAvatarId={settings?.avatar?.id}
         isLoading={isLoading}
+      />
+
+      <PrivacyPolicyModal
+        visible={isPrivacyPolicyVisible}
+        onClose={() => setIsPrivacyPolicyVisible(false)}
       />
     </SafeAreaView>
   );
@@ -423,165 +344,128 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.dark.background,
   },
-  darkContainer: {
-    backgroundColor: '#121212',
+  header: {
+    padding: 16,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.dark.text,
+  },
+  darkText: {
+    color: Colors.dark.text,
+  },
+  darkSubText: {
+    color: Colors.dark.text + '80',
+  },
+  section: {
+    marginBottom: 16,
+    marginHorizontal: 16,
+    backgroundColor: Colors.dark.card,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+    color: Colors.dark.text,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.dark.card,
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  signOutButton: {
+    borderWidth: 1,
+    borderColor: Colors.light.error,
+  },
+  resetButton: {
+    backgroundColor: Colors.light.error + '20',
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.error,
+    marginLeft: 12,
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingIcon: {
+    marginRight: 12,
+  },
+  settingText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.dark.text,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.dark.background,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#333',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#d32f2f',
-    marginBottom: 20,
-    textAlign: 'center',
-    paddingHorizontal: 40,
-  },
-  retryButton: {
-    marginTop: 10,
-  },
-  savingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  savingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#fff',
-  },
-  scrollContainer: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSubText: {
-    color: '#aaa',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: '#424242',
-  },
-  darkSectionTitle: {
-    color: '#e0e0e0',
-  },
-  profileCard: {
+  profileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-  },
-  darkCard: {
-    backgroundColor: '#1e1e1e',
-  },
-  avatarContainer: {
-    marginRight: 16,
-  },
-  avatarImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    marginBottom: 16,
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: Colors.light.tint,
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginRight: 16,
+    backgroundColor: Colors.dark.background,
   },
-  darkAvatar: {
-    backgroundColor: Colors.dark.tint,
-  },
-  avatarInitial: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  profileInfo: {
+  profileText: {
     flex: 1,
   },
-  nicknameLarge: {
+  nickname: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 12,
-    color: '#333',
+    color: Colors.dark.text,
+    marginBottom: 4,
   },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  email: {
+    fontSize: 14,
+    color: Colors.dark.text + '80',
+  },
+  editButton: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 8,
     alignItems: 'center',
-    padding: 16,
-    marginBottom: 8,
+    backgroundColor: Colors.dark.card,
+  },
+  editButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.dark.text,
   },
   settingTextContainer: {
     flex: 1,
-    marginRight: 10,
+    marginRight: 16,
   },
-  settingLabel: {
+  settingTitle: {
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 4,
-    color: '#333',
+    color: Colors.dark.text,
   },
   settingDescription: {
     fontSize: 14,
-    color: '#757575',
-  },
-  actionItemCard: {
-    marginBottom: 8,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  actionIcon: {
-    marginRight: 10,
-  },
-  actionButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  accountActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  accountButton: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  versionInfo: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#999',
-    marginTop: 20,
-    marginBottom: 10,
+    color: Colors.dark.text + '80',
+    marginTop: 2,
   },
 }); 

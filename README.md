@@ -10,7 +10,7 @@ A mobile application built with React Native and Expo for tracking and managing 
 - Achievement system
 - User profiles and settings
 - Dark mode support
-- "Daha da Gelmem" (Boycott List) - Search and filter companies to boycott during protests
+- "Boykot" (Boycott List) - Search and filter companies to boycott during protests
 - Safety tips and activist guidance throughout the app
 - Fully translated interface in Turkish
 
@@ -88,7 +88,7 @@ gompile/
 
 ## Recent Changes
 
-### Daha da Gelmem (Boycott List) Feature
+### Boykot (Boycott List) Feature
 
 A new feature allowing users to browse and search for companies being boycotted during protests:
 

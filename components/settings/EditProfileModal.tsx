@@ -31,8 +31,8 @@ interface EditProfileModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (nickname: string, avatarId: string) => Promise<void>;
-  currentNickname: string;
-  currentAvatarId: string;
+  initialNickname?: string;
+  initialAvatarId?: string;
   isLoading: boolean;
 }
 
@@ -40,25 +40,25 @@ export default function EditProfileModal({
   visible,
   onClose,
   onSave,
-  currentNickname,
-  currentAvatarId,
+  initialNickname,
+  initialAvatarId,
   isLoading,
 }: EditProfileModalProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const [nickname, setNickname] = useState(currentNickname);
-  const [selectedAvatar, setSelectedAvatar] = useState<string>(currentAvatarId || '');
+  const [nickname, setNickname] = useState(initialNickname || '');
+  const [selectedAvatar, setSelectedAvatar] = useState<string>(initialAvatarId || '');
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [loadingAvatars, setLoadingAvatars] = useState(true);
 
   useEffect(() => {
     if (visible) {
-      setNickname(currentNickname);
-      setSelectedAvatar(currentAvatarId);
+      setNickname(initialNickname || '');
+      setSelectedAvatar(initialAvatarId || '');
       loadAvatars();
     }
-  }, [visible, currentNickname, currentAvatarId]);
+  }, [visible, initialNickname, initialAvatarId]);
 
   const loadAvatars = () => {
     setLoadingAvatars(true);
