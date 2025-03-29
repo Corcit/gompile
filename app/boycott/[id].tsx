@@ -119,6 +119,14 @@ export default function BoycottDetailScreen() {
       <Stack.Screen
         options={{
           title: company.name,
+          headerLeft: () => (
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color={customColors.text} />
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
               <Ionicons name="share-outline" size={24} color={customColors.tint} />
@@ -245,8 +253,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   backButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    padding: 8,
   },
   backButtonText: {
     color: customColors.tint,
