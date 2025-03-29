@@ -737,6 +737,33 @@ class ApiClient {
               announcements = announcements.slice(0, limit);
             }
             
+            // Ensure each announcement has a properly structured stats object
+            announcements = announcements.map((announcement: any) => {
+              // Create a default stats object if it doesn't exist
+              if (!announcement.stats) {
+                announcement.stats = {
+                  views: 0,
+                  likes: 0,
+                  shares: 0,
+                  comments: 0,
+                  isLiked: false
+                };
+              } else {
+                // Ensure isLiked property exists
+                if (announcement.stats.isLiked === undefined) {
+                  announcement.stats.isLiked = false;
+                }
+                
+                // Ensure other required stats properties exist
+                announcement.stats.views = announcement.stats.views || 0;
+                announcement.stats.likes = announcement.stats.likes || 0;
+                announcement.stats.shares = announcement.stats.shares || 0;
+                announcement.stats.comments = announcement.stats.comments || 0;
+              }
+              
+              return announcement;
+            });
+            
             // Return formatted response
             return {
               announcements,
