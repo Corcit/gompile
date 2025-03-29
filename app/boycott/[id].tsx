@@ -4,13 +4,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { BoycottCompany } from '../../services/api/models/BoycottCompany';
-import BoycottService from '../../services/api/services/boycottService';
+import { useApi } from '../../services/api/ApiContext';
 
 // Using dark theme as required by the app
 const colorScheme = 'dark';
 const colors = Colors[colorScheme];
 
-const boycottService = new BoycottService({});
+// Custom colors with cardBackground property for styling
+const customColors = {
+  ...Colors.dark,
+  cardBackground: Colors.dark.card
+};
 
 export default function BoycottDetailScreen() {
   const params = useLocalSearchParams();
@@ -20,6 +24,9 @@ export default function BoycottDetailScreen() {
   const [company, setCompany] = useState<BoycottCompany | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get the properly initialized boycottService from context
+  const { boycottService } = useApi();
 
   useEffect(() => {
     loadCompanyDetails();
@@ -86,7 +93,7 @@ export default function BoycottDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.tint} />
+        <ActivityIndicator size="large" color={customColors.tint} />
         <Text style={styles.loadingText}>Bilgiler yükleniyor...</Text>
       </View>
     );
@@ -95,7 +102,7 @@ export default function BoycottDetailScreen() {
   if (error || !company) {
     return (
       <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle-outline" size={48} color={colors.text} />
+        <Ionicons name="alert-circle-outline" size={48} color={customColors.text} />
         <Text style={styles.errorText}>{error || 'Bir hata oluştu'}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadCompanyDetails}>
           <Text style={styles.retryButtonText}>Tekrar Dene</Text>
@@ -114,7 +121,7 @@ export default function BoycottDetailScreen() {
           title: company.name,
           headerRight: () => (
             <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-              <Ionicons name="share-outline" size={24} color={colors.tint} />
+              <Ionicons name="share-outline" size={24} color={customColors.tint} />
             </TouchableOpacity>
           ),
         }}
@@ -129,7 +136,7 @@ export default function BoycottDetailScreen() {
           <View style={styles.titleContainer}>
             <Text style={styles.companyName}>{company.name}</Text>
             <Text style={styles.category}>
-              <Ionicons name="pricetag-outline" size={14} color={colors.text} /> {company.category}
+              <Ionicons name="pricetag-outline" size={14} color={customColors.text} /> {company.category}
             </Text>
           </View>
         </View>
@@ -159,7 +166,7 @@ export default function BoycottDetailScreen() {
             <View style={styles.alternativesContainer}>
               {company.alternativeCompanies.map((alternative, index) => (
                 <View key={index} style={styles.alternativeItem}>
-                  <Ionicons name="checkmark-circle" size={18} color={colors.accent} />
+                  <Ionicons name="checkmark-circle" size={18} color={customColors.accent} />
                   <Text style={styles.alternativeText}>{alternative}</Text>
                 </View>
               ))}
@@ -198,35 +205,35 @@ export default function BoycottDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: customColors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.dark.background,
+    backgroundColor: customColors.background,
   },
   loadingText: {
     marginTop: 16,
-    color: Colors.dark.text,
+    color: customColors.text,
     fontSize: 16,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.dark.background,
+    backgroundColor: customColors.background,
     padding: 16,
   },
   errorText: {
-    color: Colors.dark.text,
+    color: customColors.text,
     fontSize: 16,
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: Colors.dark.tint,
+    backgroundColor: customColors.tint,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -242,7 +249,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   backButtonText: {
-    color: Colors.dark.tint,
+    color: customColors.tint,
     fontSize: 16,
   },
   shareButton: {
@@ -252,7 +259,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: customColors.cardBackground,
     borderRadius: 12,
     margin: 16,
   },
@@ -269,17 +276,17 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.dark.text,
+    color: customColors.text,
     marginBottom: 4,
   },
   category: {
     fontSize: 14,
-    color: Colors.dark.text + '80',
+    color: customColors.text + '80',
   },
   infoContainer: {
     marginHorizontal: 16,
     marginBottom: 16,
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: customColors.cardBackground,
     borderRadius: 12,
     padding: 16,
   },
@@ -290,12 +297,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: Colors.dark.text + '80',
+    color: customColors.text + '80',
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.dark.text,
+    color: customColors.text,
   },
   section: {
     marginHorizontal: 16,
@@ -304,32 +311,32 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.dark.text,
+    color: customColors.text,
     marginBottom: 8,
   },
   reasonContainer: {
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: customColors.cardBackground,
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.dark.tint,
+    borderLeftColor: customColors.tint,
   },
   reasonText: {
     fontSize: 16,
-    color: Colors.dark.text,
+    color: customColors.text,
     fontWeight: '500',
     lineHeight: 24,
   },
   descriptionText: {
     fontSize: 15,
-    color: Colors.dark.text,
+    color: customColors.text,
     lineHeight: 22,
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: customColors.cardBackground,
     borderRadius: 12,
     padding: 16,
   },
   alternativesContainer: {
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: customColors.cardBackground,
     borderRadius: 12,
     padding: 16,
   },
@@ -340,11 +347,11 @@ const styles = StyleSheet.create({
   },
   alternativeText: {
     fontSize: 15,
-    color: Colors.dark.text,
+    color: customColors.text,
     marginLeft: 8,
   },
   linkButton: {
-    backgroundColor: Colors.dark.tint,
+    backgroundColor: customColors.tint,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -364,18 +371,18 @@ const styles = StyleSheet.create({
   },
   disclaimer: {
     fontSize: 12,
-    color: Colors.dark.text + '60',
+    color: customColors.text + '60',
     textAlign: 'center',
     fontStyle: 'italic',
   },
   noLinkContainer: {
-    backgroundColor: Colors.dark.cardBackground,
+    backgroundColor: customColors.cardBackground,
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
   },
   noLinkText: {
-    color: Colors.dark.text + '80',
+    color: customColors.text + '80',
     fontSize: 14,
     fontStyle: 'italic',
   },
