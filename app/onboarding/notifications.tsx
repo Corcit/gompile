@@ -35,13 +35,10 @@ export default function NotificationsScreen() {
       // Save user preferences
       await AsyncStorage.setItem('notifications_enabled', allowNotifications.toString());
       
-      // Mark onboarding as completed
-      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
-      
       // Navigate to the main app
       router.replace('/(tabs)');
     } catch (error) {
-      console.error('Failed to save onboarding status:', error);
+      console.error('Failed to save preferences:', error);
       Alert.alert(
         'Error',
         'There was a problem saving your preferences. Please try again.',
@@ -54,12 +51,22 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, isDark && styles.containerDark]}>
-      {/* Progress indicator */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: '100%' }]} />
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.push('/onboarding/experience')}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
+        </TouchableOpacity>
+        
+        <Text style={styles.appName}>Boykot App</Text>
+        
+        <View style={styles.stepIndicatorContainer}>
+          <View style={styles.stepDot} />
+          <View style={styles.stepDot} />
+          <View style={styles.stepDot} />
+          <View style={[styles.stepDot, styles.activeDot]} />
         </View>
-        <Text style={[styles.progressText, isDark && styles.progressTextDark]}>4/4</Text>
       </View>
       
       <ScrollView 
@@ -148,6 +155,38 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    width: '100%',
+    marginBottom: 10,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  appName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.dark.text,
+  },
+  stepIndicatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stepDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.dark.tint + '30',
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: Colors.dark.tint,
+  },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -182,10 +221,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 20,
     borderRadius: 16,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 20,
   },
   title: {
     fontSize: 24,
