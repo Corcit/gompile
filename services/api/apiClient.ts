@@ -1,105 +1,36 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosProgressEvent } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  startAfter, 
+  DocumentData,
+  QueryDocumentSnapshot,
+  DocumentSnapshot,
+  CollectionReference
+} from 'firebase/firestore';
+import { firestore, auth } from '../firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut,
+  onAuthStateChanged,
+  User
+} from 'firebase/auth';
 
-// Define the base URL of our API 
-// In a real app, this would be a configuration file or environment variable
-const API_URL = 'http://localhost:80/api';
-
-// Define any default headers
+// Define any default headers for REST API (if still needed)
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
   'Accept': 'application/json',
-};
-
-// Enable mock mode for development without a backend
-const USE_MOCK_DATA = true;
-
-// Mock data for development
-const MOCK_DATA = {
-  '/users/me': {
-    userId: 'current-user',
-    nickname: 'ActiveUser',
-    avatarId: 'user',
-    experienceLevel: 2,
-    createdAt: new Date().toISOString(),
-    protestCount: 24,
-  },
-  '/users/stats': {
-    protestsAttended: 24,
-    totalHours: 48,
-    achievements: 8,
-    currentStreak: 3,
-    longestStreak: 7
-  },
-  '/users/achievements': [
-    {
-      id: 'achievement1',
-      name: 'First Attendance',
-      description: 'Attended your first protest',
-      iconUrl: null,
-      isUnlocked: true,
-      unlockedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      progress: 100,
-      requirement: {
-        type: 'attendance',
-        count: 1
-      }
-    },
-    {
-      id: 'achievement2',
-      name: 'Regular Activist',
-      description: 'Attended 10 protests',
-      iconUrl: null,
-      isUnlocked: true,
-      unlockedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      progress: 100,
-      requirement: {
-        type: 'attendance',
-        count: 10
-      }
-    },
-    {
-      id: 'achievement3',
-      name: 'Dedicated Activist',
-      description: 'Attended 20 protests',
-      iconUrl: null,
-      isUnlocked: true,
-      unlockedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      progress: 100,
-      requirement: {
-        type: 'attendance',
-        count: 20
-      }
-    },
-    {
-      id: 'achievement4',
-      name: 'Week Streak',
-      description: 'Maintained a 7-day attendance streak',
-      iconUrl: null,
-      isUnlocked: false,
-      progress: 42,
-      requirement: {
-        type: 'streak',
-        days: 7
-      }
-    }
-  ],
-  '/users/leaderboard/rank': {
-    rank: 5,
-    score: 24,
-    totalParticipants: 120
-  },
-  '/users/leaderboard': {
-    entries: Array.from({ length: 30 }, (_, i) => ({
-      userId: `user-${i + 1}`,
-      nickname: `Activist${i + 1}`,
-      avatarId: ((i % 10) + 1).toString(),
-      rank: i + 1,
-      score: 100 - i * (i > 0 ? Math.floor(Math.random() * 4) + 1 : 0),
-      achievements: []
-    })),
-    total: 120
-  }
 };
 
 // Error types
@@ -116,24 +47,30 @@ export class ApiError extends Error {
 }
 
 /**
- * API Client for making HTTP requests to the server
+ * API Client for making requests to Firestore and other services
  */
 class ApiClient {
   private client: AxiosInstance;
   private static instance: ApiClient;
+  private currentUser: User | null = null;
 
   constructor() {
+    // Keep axios for any external API calls (if needed)
     this.client = axios.create({
-      baseURL: API_URL,
       headers: DEFAULT_HEADERS,
       timeout: 30000, // 30 seconds
     });
 
-    // Request interceptor to add auth token
+    // Set up auth state listener
+    onAuthStateChanged(auth, (user) => {
+      this.currentUser = user;
+    });
+
+    // Request interceptor to add auth token for external APIs
     this.client.interceptors.request.use(
       async (config: AxiosRequestConfig) => {
-        const token = await AsyncStorage.getItem('@user:token');
-        if (token && config.headers) {
+        if (this.currentUser && config.headers) {
+          const token = await this.currentUser.getIdToken();
           config.headers = {
             ...config.headers,
             Authorization: `Bearer ${token}`,
@@ -166,9 +103,8 @@ class ApiClient {
 
         // Handle token expiration
         if (code === 401) {
-          // Clear token and redirect to login
-          AsyncStorage.removeItem('@user:token');
-          // In a real app, we would redirect to login or trigger a refresh token flow
+          // Sign out the user if their token is invalid
+          this.signOut();
         }
 
         return Promise.reject(new ApiError(message, code, data));
@@ -186,158 +122,378 @@ class ApiClient {
     return ApiClient.instance;
   }
 
+  // AUTH METHODS
+
   /**
-   * Make a GET request
+   * Sign in with email and password
    */
-  public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  public async signIn(email: string, password: string): Promise<User> {
     try {
-      // Use mock data if enabled
-      if (USE_MOCK_DATA) {
-        return this.getMockResponse(url, config);
-      }
-      
-      const response: AxiosResponse<T> = await this.client.get(url, config);
-      return response.data;
-    } catch (error) {
-      throw error;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error: any) {
+      throw new ApiError(error.message, error.code || 500);
     }
   }
 
   /**
-   * Make a POST request
+   * Create a new user account
+   */
+  public async signUp(email: string, password: string): Promise<User> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error: any) {
+      throw new ApiError(error.message, error.code || 500);
+    }
+  }
+
+  /**
+   * Sign out the current user
+   */
+  public async signOut(): Promise<void> {
+    try {
+      await signOut(auth);
+      await AsyncStorage.removeItem('@user:token');
+    } catch (error: any) {
+      throw new ApiError(error.message, error.code || 500);
+    }
+  }
+
+  /**
+   * Get the current user
+   */
+  public getCurrentUser(): User | null {
+    return this.currentUser;
+  }
+
+  // FIRESTORE DATA METHODS
+
+  /**
+   * Get the actual user ID for Firestore operations
+   */
+  private async getActualUserId(): Promise<string | null> {
+    // First check AsyncStorage for our stored actual user ID
+    const actualUserId = await AsyncStorage.getItem('@auth:actualUserId');
+    if (actualUserId) {
+      return actualUserId;
+    }
+    
+    // Fall back to currentUser.uid if no stored ID
+    return this.currentUser?.uid || null;
+  }
+
+  /**
+   * Get a document from a collection
+   */
+  public async getDocument<T>(collectionName: string, documentId: string): Promise<T | null> {
+    try {
+      // For user-specific collections, use the actual user ID if documentId is 'me' or current user ID
+      if (['userProfiles', 'userSettings', 'leaderboard'].includes(collectionName) && 
+          (documentId === 'me' || documentId === this.currentUser?.uid)) {
+        const actualUserId = await this.getActualUserId();
+        if (actualUserId) {
+          documentId = actualUserId;
+        }
+      }
+      
+      const docRef = doc(firestore, collectionName, documentId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as unknown as T;
+      } else {
+        return null;
+      }
+    } catch (error: any) {
+      console.warn(`Error in getDocument (${collectionName}/${documentId}):`, error);
+      throw new ApiError(error.message, error.code || 500);
+    }
+  }
+
+  /**
+   * Get multiple documents from a collection with optional filters
+   */
+  public async getDocuments<T>(
+    collectionName: string, 
+    filters?: { field: string; operator: any; value: any }[], 
+    sortBy?: { field: string; direction: 'asc' | 'desc' },
+    pagination?: { pageSize: number; startAfter?: DocumentSnapshot }
+  ): Promise<{ data: T[]; lastDoc?: DocumentSnapshot }> {
+    try {
+      // Replace 'userId' filter with actual ID if needed
+      if (filters && filters.length > 0) {
+        const userIdFilter = filters.find(f => f.field === 'userId' && (f.value === this.currentUser?.uid || f.value === 'me'));
+        if (userIdFilter) {
+          const actualUserId = await this.getActualUserId();
+          if (actualUserId) {
+            userIdFilter.value = actualUserId;
+          }
+        }
+      }
+      
+      const collectionRef = collection(firestore, collectionName);
+      
+      // Build query
+      let q = query(collectionRef);
+      
+      // Add filters if provided
+      if (filters && filters.length > 0) {
+        filters.forEach((filter) => {
+          q = query(q, where(filter.field, filter.operator, filter.value));
+        });
+      }
+      
+      // Add sorting if provided
+      if (sortBy) {
+        q = query(q, orderBy(sortBy.field, sortBy.direction));
+      }
+      
+      // Add pagination if provided
+      if (pagination) {
+        q = query(q, limit(pagination.pageSize));
+        
+        if (pagination.startAfter) {
+          q = query(q, startAfter(pagination.startAfter));
+        }
+      }
+      
+      const querySnapshot = await getDocs(q);
+      
+      const data: T[] = [];
+      let lastDoc: DocumentSnapshot | undefined;
+      
+      querySnapshot.forEach((doc) => {
+        data.push({ id: doc.id, ...doc.data() } as unknown as T);
+        lastDoc = doc;
+      });
+      
+      return { data, lastDoc };
+    } catch (error: any) {
+      console.warn(`Error in getDocuments (${collectionName}):`, error);
+      
+      // For testing: Return mock data for specific collections
+      if (collectionName === 'leaderboard') {
+        console.log('Providing mock leaderboard data after error');
+        return {
+          data: [
+            {
+              id: 'user1',
+              userId: 'user1',
+              nickname: 'Activist123',
+              avatarId: 'avatar1',
+              score: 950,
+              rank: 1,
+              achievements: [{ id: 'achievement1', name: 'First Attendance' }],
+              weeklyScore: 120,
+              monthlyScore: 450,
+              allTimeScore: 950
+            },
+            {
+              id: 'user2',
+              userId: 'user2',
+              nickname: 'BoycottHero',
+              avatarId: 'avatar2',
+              score: 820,
+              rank: 2,
+              achievements: [
+                { id: 'achievement1', name: 'First Attendance' },
+                { id: 'achievement4', name: 'Week Streak' }
+              ],
+              weeklyScore: 95,
+              monthlyScore: 380,
+              allTimeScore: 820
+            },
+            {
+              id: 'user3',
+              userId: 'user3',
+              nickname: 'GompileUser',
+              avatarId: 'avatar3',
+              score: 730,
+              rank: 3,
+              achievements: [{ id: 'achievement1', name: 'First Attendance' }],
+              weeklyScore: 85,
+              monthlyScore: 290,
+              allTimeScore: 730
+            }
+          ] as unknown as T[],
+          lastDoc: undefined
+        };
+      }
+      
+      throw new ApiError(error.message, error.code || 500);
+    }
+  }
+
+  /**
+   * Add a document to a collection
+   */
+  public async addDocument<T>(collectionName: string, data: any): Promise<T> {
+    try {
+      const newDocRef = doc(collection(firestore, collectionName));
+      await setDoc(newDocRef, { 
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      return { id: newDocRef.id, ...data } as unknown as T;
+    } catch (error: any) {
+      throw new ApiError(error.message, error.code || 500);
+    }
+  }
+
+  /**
+   * Update a document in a collection
+   */
+  public async updateDocument<T>(collectionName: string, documentId: string, data: any): Promise<T> {
+    try {
+      const docRef = doc(firestore, collectionName, documentId);
+      await updateDoc(docRef, { 
+        ...data,
+        updatedAt: new Date()
+      });
+      
+      // Get the updated document
+      const updatedDoc = await getDoc(docRef);
+      
+      return { id: updatedDoc.id, ...updatedDoc.data() } as unknown as T;
+    } catch (error: any) {
+      throw new ApiError(error.message, error.code || 500);
+    }
+  }
+
+  /**
+   * Delete a document from a collection
+   */
+  public async deleteDocument(collectionName: string, documentId: string): Promise<boolean> {
+    try {
+      const docRef = doc(firestore, collectionName, documentId);
+      await deleteDoc(docRef);
+      return true;
+    } catch (error: any) {
+      throw new ApiError(error.message, error.code || 500);
+    }
+  }
+
+  /**
+   * Handles API GET requests. If the endpoint starts with '/', it's treated as a REST API call.
+   * Otherwise, it attempts to fetch data from Firestore based on collection/document pattern.
+   * @param endpoint The API endpoint or Firestore path (e.g., '/users/settings' or 'users/userId')
+   * @param config Optional request configuration
+   */
+  public async get(endpoint: string, config?: any): Promise<any> {
+    try {
+      if (endpoint.startsWith('/')) {
+        // Parse endpoint to determine Firestore collection and document
+        const path = endpoint.substring(1).split('/');
+        const collection = path[0];
+        
+        // Handle specific endpoints with custom logic
+        if (endpoint === '/users/me') {
+          // Get current user data
+          const userId = this.currentUser?.uid;
+          if (!userId) throw new ApiError('User not authenticated', 401);
+          return this.getDocument('userProfiles', userId);
+        }
+        else if (endpoint === '/users/settings') {
+          // Get user settings
+          const userId = this.currentUser?.uid || 'user1'; // For development: default to user1 if not logged in
+          return this.getDocument('userSettings', userId);
+        }
+        else if (endpoint === '/users/leaderboard') {
+          // Get leaderboard data with pagination and filtering
+          const timeframe = config?.params?.timeframe || 'weekly';
+          const limitCount = config?.params?.limit || 10;
+          const offsetCount = config?.params?.offset || 0;
+          
+          // Query the leaderboard collection
+          const sortField = timeframe === 'weekly' ? 'weeklyScore' : 
+                           timeframe === 'monthly' ? 'monthlyScore' : 'allTimeScore';
+          
+          const { data } = await this.getDocuments('leaderboard', 
+            undefined, 
+            { field: sortField, direction: 'desc' },
+            { pageSize: limitCount + offsetCount }
+          );
+          
+          // Apply offset and return the result
+          const entries = data.slice(offsetCount, offsetCount + limitCount);
+          return {
+            entries,
+            total: data.length
+          };
+        }
+        else if (endpoint === '/users/leaderboard/rank') {
+          // Get user's rank
+          const userId = this.currentUser?.uid || 'user1'; // For development: default to user1 if not logged in
+          const timeframe = config?.params?.timeframe || 'weekly';
+          
+          // Get the user's entry
+          const userDoc = await this.getDocument('leaderboard', userId);
+          if (!userDoc) {
+            return { rank: 0, score: 0, totalParticipants: 0 };
+          }
+          
+          // Get all leaderboard entries to determine rank
+          const sortField = timeframe === 'weekly' ? 'weeklyScore' : 
+                           timeframe === 'monthly' ? 'monthlyScore' : 'allTimeScore';
+          
+          const { data } = await this.getDocuments('leaderboard', 
+            undefined, 
+            { field: sortField, direction: 'desc' }
+          );
+          
+          // Find user's position in sorted list
+          const score = timeframe === 'weekly' ? userDoc.weeklyScore : 
+                       timeframe === 'monthly' ? userDoc.monthlyScore : userDoc.allTimeScore;
+          
+          const rank = data.findIndex((entry: any) => entry.userId === userId) + 1;
+          
+          return {
+            rank: rank > 0 ? rank : 0,
+            score: score || 0,
+            totalParticipants: data.length
+          };
+        }
+        
+        // For other endpoints, try REST API call
+        console.log(`Making REST API call to ${endpoint}`);
+        const response = await this.client.get(endpoint, config);
+        return response.data;
+      } else {
+        // Handle Firestore path, where endpoint is a direct path to a document or collection
+        const pathParts = endpoint.split('/');
+        
+        if (pathParts.length % 2 === 0) {
+          // Even number of segments means it's a document path (e.g. 'collection/docId')
+          const collection = pathParts.slice(0, -1).join('/');
+          const docId = pathParts[pathParts.length - 1];
+          return this.getDocument(collection, docId);
+        } else {
+          // Odd number of segments means it's a collection path (e.g. 'collection')
+          return this.getDocuments(endpoint);
+        }
+      }
+    } catch (error: any) {
+      console.error(`Error in API client get (${endpoint}):`, error);
+      throw new ApiError(error.message || 'Failed to get data', error.code || 500);
+    }
+  }
+
+  /**
+   * Make a POST request to an external API
+   * Keep this method for any external API calls that might be needed
    */
   public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     try {
-      // Use mock data if enabled
-      if (USE_MOCK_DATA) {
-        return this.getMockResponse(url, config);
-      }
-      
       const response: AxiosResponse<T> = await this.client.post(url, data, config);
       return response.data;
-    } catch (error) {
-      throw error;
+    } catch (error: any) {
+      throw new ApiError(error.message, error.response?.status || 500);
     }
-  }
-
-  /**
-   * Make a PUT request
-   */
-  public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      // Use mock data if enabled
-      if (USE_MOCK_DATA) {
-        return this.getMockResponse(url, config);
-      }
-      
-      const response: AxiosResponse<T> = await this.client.put(url, data, config);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Make a DELETE request
-   */
-  public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      // Use mock data if enabled
-      if (USE_MOCK_DATA) {
-        return this.getMockResponse(url, config);
-      }
-      
-      const response: AxiosResponse<T> = await this.client.delete(url, config);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Upload a file
-   */
-  public async uploadFile<T>(url: string, file: any, onProgress?: (progress: number) => void): Promise<T> {
-    // Use mock data if enabled
-    if (USE_MOCK_DATA) {
-      return this.getMockResponse(url);
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response: AxiosResponse<T> = await this.client.post(url, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-          if (onProgress && progressEvent.total) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            onProgress(progress);
-          }
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Get mock response for development without a backend
-   */
-  private getMockResponse(url: string, config?: AxiosRequestConfig): any {
-    console.log('Using mock data for:', url);
-    
-    // Extract the base endpoint without query params
-    const endpoint = url.split('?')[0];
-    
-    // Handle special cases with query params
-    if (url.includes('/users/leaderboard')) {
-      const timeframe = config?.params?.timeframe || 'weekly';
-      const limit = config?.params?.limit || 10;
-      
-      // Create different data for different timeframes
-      const mockData = { ...MOCK_DATA['/users/leaderboard'] };
-      
-      // Adjust scores based on timeframe
-      if (timeframe === 'weekly') {
-        mockData.entries = mockData.entries.map(entry => ({
-          ...entry,
-          score: Math.floor(entry.score * 0.2) // Lower scores for weekly
-        }));
-      } else if (timeframe === 'monthly') {
-        mockData.entries = mockData.entries.map(entry => ({
-          ...entry,
-          score: Math.floor(entry.score * 0.5) // Medium scores for monthly
-        }));
-      }
-      
-      // Limit the number of entries
-      mockData.entries = mockData.entries.slice(0, limit);
-      
-      return mockData;
-    }
-    
-    if (url.includes('/users/leaderboard/rank')) {
-      const timeframe = config?.params?.timeframe || 'weekly';
-      const mockRank = { ...MOCK_DATA['/users/leaderboard/rank'] };
-      
-      // Adjust rank and score based on timeframe
-      if (timeframe === 'weekly') {
-        mockRank.score = Math.floor(mockRank.score * 0.2);
-      } else if (timeframe === 'monthly') {
-        mockRank.score = Math.floor(mockRank.score * 0.5);
-      }
-      
-      return mockRank;
-    }
-    
-    // Return default mock data or empty object
-    return MOCK_DATA[endpoint] || {};
   }
 }
 
-// Export a singleton instance
+// Export the singleton instance
 export default ApiClient.getInstance(); 
