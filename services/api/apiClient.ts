@@ -26,6 +26,7 @@ import {
   onAuthStateChanged,
   User
 } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 // Define any default headers for REST API (if still needed)
 const DEFAULT_HEADERS = {
@@ -397,9 +398,44 @@ class ApiClient {
           return this.getDocument('userProfiles', userId);
         }
         else if (endpoint === '/users/settings') {
-          // Get user settings
-          const userId = this.currentUser?.uid || 'user1'; // For development: default to user1 if not logged in
-          return this.getDocument('userSettings', userId);
+          try {
+            // Ensure user is properly authenticated
+            if (!this.currentUser) {
+              throw new ApiError('User not authenticated', 401);
+            }
+            
+            // Get the current user ID
+            const userId = this.currentUser.uid;
+            
+            // Force explicit re-authentication to ensure Firebase token is fresh
+            try {
+              // First ensure token is refreshed with force=true
+              const token = await this.currentUser.getIdToken(true);
+              
+              // Set the token on firestore's underlying implementation
+              // This ensures the token is properly set before the query
+              const auth = getAuth();
+              await auth.updateCurrentUser(this.currentUser);
+            } catch (refreshError) {
+              console.error('Error refreshing authentication token:', refreshError);
+              // Don't suppress this error - if we can't refresh auth, it's a serious issue
+              throw new ApiError('Authentication refresh failed', 401);
+            }
+            
+            // Now try to get the document with fresh authentication
+            const settingsDoc = await this.getDocument('userSettings', userId);
+            
+            // If document is null/undefined, we don't create defaults
+            if (!settingsDoc) {
+              throw new ApiError('Settings not found for user', 404);
+            }
+            
+            return settingsDoc;
+          } catch (error) {
+            console.error('Error fetching user settings:', error);
+            // Don't transform the error - let the UI handle it appropriately
+            throw error;
+          }
         }
         else if (endpoint === '/users/leaderboard') {
           // Get leaderboard data with pagination and filtering
@@ -516,6 +552,270 @@ class ApiClient {
             return this.generateEmptyAttendanceStats();
           }
         }
+        else if (endpoint === '/users/achievements') {
+          // Get user achievements for the current user
+          const userId = this.currentUser?.uid || 'user1'; // Default to user1 for development
+          
+          try {
+            // Try to get achievements from userAchievements collection
+            const { data: userAchievements } = await this.getDocuments('userAchievements', 
+              [{ field: 'userId', operator: '==', value: userId }]
+            );
+            
+            // If no user achievements found, try to get from leaderboard entry
+            if (!userAchievements || !Array.isArray(userAchievements) || userAchievements.length === 0) {
+              const leaderboardEntry = await this.getDocument('leaderboard', userId);
+              
+              if (leaderboardEntry && 
+                  typeof leaderboardEntry === 'object' && 
+                  'achievements' in leaderboardEntry && 
+                  Array.isArray(leaderboardEntry.achievements)) {
+                return leaderboardEntry.achievements;
+              }
+              
+              // Get user profile to see experience level and determine achievements
+              const userProfile = await this.getDocument('userProfiles', userId);
+              
+              // If we have a profile, generate some basic achievements based on experience level
+              if (userProfile && typeof userProfile === 'object' && 'experienceLevel' in userProfile) {
+                const experienceLevel = userProfile.experienceLevel as number;
+                
+                // Create basic achievement list based on experience level
+                const achievements = [];
+                
+                // First attendance achievement (everyone gets this)
+                achievements.push({
+                  id: 'achievement1',
+                  name: 'İlk Katılım',
+                  description: 'İlk protestona katıldın',
+                  imageUrl: null,
+                  unlockedAt: new Date().toISOString(),
+                  requirement: {
+                    type: 'attendance',
+                    target: 1,
+                    current: 1
+                  },
+                  progress: 1
+                });
+                
+                // Add more achievements based on experience level
+                if (experienceLevel >= 2) {
+                  achievements.push({
+                    id: 'achievement2',
+                    name: '5 Katılım',
+                    description: '5 protesto etkinliğine katıldın',
+                    imageUrl: null,
+                    unlockedAt: new Date().toISOString(),
+                    requirement: {
+                      type: 'attendance',
+                      target: 5,
+                      current: 5
+                    },
+                    progress: 5
+                  });
+                }
+                
+                if (experienceLevel >= 3) {
+                  achievements.push({
+                    id: 'achievement3',
+                    name: 'Haftalık Seri',
+                    description: '7 günlük katılım serisi yaptın',
+                    imageUrl: null,
+                    unlockedAt: new Date().toISOString(),
+                    requirement: {
+                      type: 'streak',
+                      target: 7,
+                      current: 7
+                    },
+                    progress: 7
+                  });
+                }
+                
+                return achievements;
+              }
+              
+              // If all else fails, return an empty array
+              return [];
+            }
+            
+            // Map the userAchievements to the expected format
+            return userAchievements.map((achievementEntry: any) => {
+              const achievementId = achievementEntry.achievementId;
+              const isUnlocked = achievementEntry.isUnlocked;
+              const unlockedAt = achievementEntry.unlockedAt;
+              const progress = achievementEntry.progress;
+              
+              // Basic achievement data
+              const achievement = {
+                id: achievementId,
+                name: this.getAchievementName(achievementId),
+                description: this.getAchievementDescription(achievementId),
+                imageUrl: null,
+                unlockedAt: isUnlocked ? unlockedAt : undefined,
+                requirement: achievementEntry.requirement || {
+                  type: 'attendance',
+                  target: 1
+                },
+                progress: progress || 0
+              };
+              
+              return achievement;
+            });
+          } catch (error) {
+            console.error('Error fetching user achievements:', error);
+            // Return empty array as fallback
+            return [];
+          }
+        }
+        else if (endpoint === '/channels/subscribed') {
+          // Get user's subscribed channels
+          const userId = this.currentUser?.uid || 'user1'; // Default to user1 for development
+          
+          try {
+            // Try to get user's channel subscriptions from channelSubscriptions collection
+            const { data: subscriptions } = await this.getDocuments('channelSubscriptions', 
+              [{ field: 'userId', operator: '==', value: userId }]
+            );
+            
+            if (!subscriptions || !Array.isArray(subscriptions) || subscriptions.length === 0) {
+              // If no subscriptions found, return default channels
+              return this.getDefaultChannels();
+            }
+            
+            // Get the channel IDs from subscriptions
+            const channelIds = subscriptions.map((sub: any) => sub.channelId);
+            
+            // Fetch the actual channel data for each subscription
+            const channels = [];
+            for (const channelId of channelIds) {
+              try {
+                const channel = await this.getDocument('channels', channelId);
+                if (channel) {
+                  channels.push(channel);
+                }
+              } catch (e) {
+                console.warn(`Failed to fetch channel ${channelId}:`, e);
+              }
+            }
+            
+            // If no channels could be fetched, return default channels
+            if (channels.length === 0) {
+              return this.getDefaultChannels();
+            }
+            
+            return channels;
+          } catch (error) {
+            console.error('Error fetching subscribed channels:', error);
+            // Return default channels as fallback
+            return this.getDefaultChannels();
+          }
+        }
+        else if (endpoint === '/announcements') {
+          try {
+            // Get limit and offset parameters
+            const limit = config?.params?.limit || 10;
+            const offset = config?.params?.offset || 0;
+            
+            // Try to fetch announcements from the announcements collection
+            let { data: announcements } = await this.getDocuments('announcements', 
+              undefined, 
+              { field: 'publishDate', direction: 'desc' }, 
+              { pageSize: limit + offset }
+            );
+            
+            if (!announcements || !Array.isArray(announcements)) {
+              return { announcements: [], total: 0 };
+            }
+            
+            // Apply offset if needed
+            if (offset > 0) {
+              announcements = announcements.slice(offset);
+            }
+            
+            // Limit the number of announcements
+            if (announcements.length > limit) {
+              announcements = announcements.slice(0, limit);
+            }
+            
+            // Return formatted response
+            return {
+              announcements,
+              total: announcements.length
+            };
+          } catch (error) {
+            console.error('Error fetching announcements:', error);
+            // Return empty result as fallback
+            return { announcements: [], total: 0 };
+          }
+        }
+        else if (endpoint === '/channels/search') {
+          try {
+            // Get search parameters
+            const sortBy = config?.params?.sortBy || 'subscriberCount';
+            const sortOrder = config?.params?.sortOrder || 'desc';
+            const limit = config?.params?.limit || 10;
+            const query = config?.params?.query || '';
+            const category = config?.params?.category;
+            
+            // Try to fetch channels from the channels collection
+            let { data: channels } = await this.getDocuments('channels');
+            
+            if (!channels || !Array.isArray(channels)) {
+              // If no results or error, return default channels
+              return { channels: this.getDefaultChannels(), total: this.getDefaultChannels().length };
+            }
+            
+            // Apply filtering if query is provided
+            if (query && query.trim() !== '') {
+              const lowerQuery = query.toLowerCase();
+              channels = channels.filter((channel: any) => 
+                (channel.name && channel.name.toLowerCase().includes(lowerQuery)) ||
+                (channel.description && channel.description.toLowerCase().includes(lowerQuery))
+              );
+            }
+            
+            // Apply category filter if provided
+            if (category) {
+              channels = channels.filter((channel: any) => 
+                channel.category === category
+              );
+            }
+            
+            // Apply sorting
+            channels.sort((a: any, b: any) => {
+              // Get the values to compare
+              const aValue = a[sortBy] !== undefined ? a[sortBy] : 0;
+              const bValue = b[sortBy] !== undefined ? b[sortBy] : 0;
+              
+              // Compare based on sort order
+              if (sortOrder === 'asc') {
+                return aValue > bValue ? 1 : -1;
+              } else {
+                return aValue < bValue ? 1 : -1;
+              }
+            });
+            
+            // Apply limit
+            if (channels.length > limit) {
+              channels = channels.slice(0, limit);
+            }
+            
+            // If no channels found after filtering, return defaults
+            if (channels.length === 0) {
+              return { channels: this.getDefaultChannels(), total: this.getDefaultChannels().length };
+            }
+            
+            // Return formatted response
+            return {
+              channels,
+              total: channels.length
+            };
+          } catch (error) {
+            console.error('Error searching channels:', error);
+            // Return default channels as fallback
+            return { channels: this.getDefaultChannels(), total: this.getDefaultChannels().length };
+          }
+        }
         
         // For other endpoints, try REST API call
         console.log(`Making REST API call to ${endpoint}`);
@@ -558,6 +858,95 @@ class ApiClient {
       thisYear: 0,
       byCategory: {}
     };
+  }
+
+  /**
+   * Get a human-readable name for an achievement based on its ID
+   * @private
+   */
+  private getAchievementName(achievementId: string): string {
+    // Map achievement IDs to human-readable names
+    const achievementNames: {[key: string]: string} = {
+      'achievement1': 'İlk Katılım',
+      'achievement2': '5 Katılım',
+      'achievement3': 'Haftalık Seri',
+      'achievement4': 'Tamirat Efendisi',
+      'achievement5': 'Sosyal Aktivist',
+      'streak_3': '3 Gün Seri',
+      'streak_7': '7 Gün Seri',
+      'streak_14': '14 Gün Seri',
+      'attendance_1': 'İlk Katılım',
+      'attendance_5': '5 Katılım',
+      'attendance_10': '10 Katılım',
+      'attendance_20': '20 Katılım',
+      'verified_5': '5 Onaylı Katılım',
+      'social_share_3': '3 Sosyal Paylaşım',
+    };
+    
+    return achievementNames[achievementId] || `Rozet ${achievementId}`;
+  }
+
+  /**
+   * Get a description for an achievement based on its ID
+   * @private
+   */
+  private getAchievementDescription(achievementId: string): string {
+    // Map achievement IDs to descriptions
+    const achievementDescriptions: {[key: string]: string} = {
+      'achievement1': 'İlk protestona katıldın',
+      'achievement2': '5 protesto etkinliğine katıldın',
+      'achievement3': '7 günlük katılım serisi yaptın',
+      'achievement4': '10 protestoya katılarak aktif bir savunucu oldun',
+      'achievement5': 'Sosyal medyada 3 kez katılımını paylaştın',
+      'streak_3': '3 gün üst üste eylemlere katılım gösterdin',
+      'streak_7': '7 gün üst üste eylemlere katılım gösterdin',
+      'streak_14': '14 gün üst üste eylemlere katılım gösterdin',
+      'attendance_1': 'İlk tamirata katıldın',
+      'attendance_5': '5 tamirata katıldın',
+      'attendance_10': '10 tamirata katıldın',
+      'attendance_20': '20 tamirata katıldın',
+      'verified_5': '5 kez onaylı olarak tamirat katılımın kaydedildi',
+      'social_share_3': 'Sosyal medyada 3 kez katılımını paylaştın',
+    };
+    
+    return achievementDescriptions[achievementId] || 'Bu rozeti kazandın!';
+  }
+
+  /**
+   * Get default recommended channels for new users
+   * @private
+   */
+  private getDefaultChannels(): any[] {
+    // Return an array of default channels with sample data
+    return [
+      {
+        id: 'channel1',
+        name: 'Ana Kanal',
+        description: 'Önemli duyurular ve haberler',
+        imageUrl: null,
+        subscriberCount: 1250,
+        type: 'official',
+        category: 'general'
+      },
+      {
+        id: 'channel2',
+        name: 'Organizasyon',
+        description: 'Etkinlikler ve organizasyonlar hakkında bilgiler',
+        imageUrl: null,
+        subscriberCount: 980,
+        type: 'official',
+        category: 'events'
+      },
+      {
+        id: 'channel3',
+        name: 'Tamirat Duyuruları',
+        description: 'Tamirat ile ilgili gelişmeler ve bilgiler',
+        imageUrl: null,
+        subscriberCount: 850,
+        type: 'official',
+        category: 'protest'
+      }
+    ];
   }
 
   /**
