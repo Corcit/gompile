@@ -5,14 +5,49 @@ A mobile application built with React Native and Expo for tracking and managing 
 ## Features
 
 - Home screen with attendance tracking and statistics
+  - Interactive location buttons for accessing "Gözaltı Kremi" and "Tamirat" locations
+  - Real-time attendance statistics
+  - Calendar view for tracking participation
 - Leaderboard system for activist engagement
 - News and announcements
 - Achievement system
 - User profiles and settings
-- Dark mode support
+  - Customizable profile with avatar and nickname
+  - Privacy controls for leaderboard visibility
+  - Notification preferences
+  - Dark mode support
 - "Boykot" (Boycott List) - Search and filter companies to boycott during protests
 - Safety tips and activist guidance throughout the app
 - Fully translated interface in Turkish
+
+## Recent Updates
+
+### Location Services Integration
+- Added quick access buttons to important locations:
+  - "Gözaltı Kremi Lokasyonları" (halkharita.com)
+  - "Tamirat Lokasyonları" (ozgurlukharitasi.com)
+- Integrated web browser support for seamless location access
+
+### Enhanced Settings Screen
+- Improved dark mode compatibility
+- New privacy policy modal with better visibility
+- Redesigned action buttons for better accessibility
+- Enhanced profile management interface
+- Streamlined notification controls
+- Added leaderboard visibility toggle
+
+### UI/UX Improvements
+- Consistent dark theme implementation across all screens
+- Enhanced button and text visibility
+- Improved contrast for better readability
+- Modernized modal interfaces
+- Streamlined navigation experience
+
+### Privacy and Security
+- Added comprehensive privacy policy
+- Enhanced user data protection
+- Improved account management options
+- Added data reset functionality
 
 ## Tech Stack
 
@@ -75,6 +110,9 @@ gompile/
 │   ├── attendance/         # Attendance-related components
 │   │   ├── TamiratStats.tsx # Statistics with safety tips
 │   │   └── CheckInModal.tsx # Attendance check-in
+│   ├── settings/          # Settings components
+│   │   ├── EditProfileModal.tsx # Profile editor
+│   │   └── PrivacyPolicyModal.tsx # Privacy policy
 │   └── ui/                 # UI components
 ├── constants/              # App constants
 │   └── Colors.ts           # Color themes
@@ -127,3 +165,181 @@ A new feature allowing users to browse and search for companies being boycotted 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Development Setup
+
+1. **Prerequisites**
+   - Node.js (v14 or newer)
+   - npm or yarn
+   - iOS: Xcode (latest version)
+   - Android: Android Studio and SDK
+
+2. **Installation**
+   ```bash
+   # Clone the repository
+   git clone <repository-url>
+   cd gompile
+
+   # Install dependencies
+   npm install
+   ```
+
+3. **Running the app**
+   ```bash
+   # Start the development server
+   npm start
+
+   # Run on iOS
+   npm run ios
+
+   # Run on Android
+   npm run android
+   ```
+
+## Firebase Configuration
+
+The app uses Firebase for backend services. The configuration is already set up in the codebase:
+
+- Firebase Auth for authentication
+- Firestore for database operations
+- Firebase Storage for file uploads
+
+The Firebase project configuration is stored in:
+- `services/firebase.ts` - Main Firebase configuration
+- `ios/Gompile/GoogleService-Info.plist` - iOS Firebase configuration
+- `android/app/google-services.json` - Android Firebase configuration (if applicable)
+
+## Authentication Flow
+
+The app uses a two-tier authentication system:
+
+### Production Mode (Firebase Authentication)
+- The app uses Firebase Anonymous Authentication to authenticate users
+- User credentials (username/password) are stored in Firestore's `userCredentials` collection
+- User profiles are stored in `userProfiles` collection
+- The authentication flow works as follows:
+  1. User enters username and password
+  2. System signs in anonymously with Firebase Auth
+  3. System queries Firestore to validate username and password
+  4. On successful validation, the app stores the actual user ID from credentials
+  5. All subsequent data operations use this stored ID to access the correct user data
+  6. This approach ensures consistent data access across sessions without requiring email/password
+
+### Development Mode
+- For development and testing, the app can use a local authentication system
+- Set `USE_DEV_MODE = true` in `AuthContext.tsx` to enable this mode
+- In development mode:
+  - User credentials are stored in AsyncStorage
+  - No Firebase authentication is required
+  - All data is stored and retrieved locally
+
+### Security Rules
+- Firestore security rules are set up to:
+  - Allow anonymous users to query `userCredentials` for login purposes
+  - Restrict write access to authenticated users only
+  - Ensure users can only modify their own data
+
+## TestFlight Deployment
+
+### Prerequisites
+
+1. **Apple Developer Account**
+   - You need an active Apple Developer account ($99/year)
+   - Enroll at [developer.apple.com](https://developer.apple.com)
+
+2. **App Store Connect Setup**
+   - Create a new app in App Store Connect
+   - Note the App ID and SKU
+   - Set up your app's metadata and information
+
+3. **Certificates and Provisioning Profiles**
+   - Create an App Store distribution certificate
+   - Create a provisioning profile for your app
+
+### Configuration
+
+1. **Update `eas.json`**
+   - Replace the placeholder values with your actual Apple credentials:
+     ```json
+     "submit": {
+       "production": {
+         "ios": {
+           "appleId": "your-apple-id@example.com",
+           "ascAppId": "1234567890", // From App Store Connect
+           "appleTeamId": "ABCDEF1234" // From Developer Account
+         }
+       },
+       "test": {
+         "ios": {
+           "appleId": "your-apple-id@example.com",
+           "ascAppId": "1234567890",
+           "appleTeamId": "ABCDEF1234"
+         }
+       }
+     }
+     ```
+
+2. **Verify App Metadata**
+   - Make sure `app.json` contains the correct version, bundle ID, and other metadata
+
+### Deployment
+
+You can deploy to TestFlight using the provided script:
+
+```bash
+npm run deploy:testflight
+```
+
+Or manually with EAS CLI:
+
+```bash
+# Install EAS CLI if not already installed
+npm install -g eas-cli
+
+# Login to EAS
+eas login
+
+# Build for TestFlight
+eas build --platform ios --profile test
+
+# Submit to TestFlight
+eas submit -p ios --profile test
+```
+
+### After Submission
+
+1. Wait for Apple to process your build (typically 15-30 minutes)
+2. Address any issues if Apple rejects your build
+3. Add TestFlight testers in App Store Connect
+4. Send invitations to testers
+
+## Troubleshooting
+
+### Common TestFlight Issues
+
+1. **Build Processing Failed**
+   - Check the issue details in App Store Connect
+   - Most common reasons: missing privacy declarations or entitlements
+
+2. **Firebase Connectivity Issues**
+   - Verify your Firebase Project settings allow access from your app
+   - Check for proper initialization in the app code
+
+3. **Certificate Issues**
+   - Ensure your certificates are valid and not expired
+   - Regenerate provisioning profiles if needed
+
+## Privacy-Focused Authentication
+
+Boykot App is committed to user privacy. We have specifically designed our authentication system to NOT collect any personal information:
+
+- We use username-based authentication instead of email/phone
+- No personal identifiable information is collected or stored
+- User data is stored locally and only shared with our servers when necessary for core functionality
+- All stored preferences are kept anonymous and not tied to real identities
+
+This approach helps protect user privacy while still providing necessary account functionality for accessing the app's features. Users can create an account with just a username and password, with no email verification or phone number required.
+
+## License
+
+[License information here]
