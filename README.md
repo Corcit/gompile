@@ -172,6 +172,25 @@ A new feature allowing users to browse and search for companies being boycotted 
 - Created services for managing boycott data
 - Implemented new screens and navigation for the boycott feature
 
+### API Error Fix in Boycott Details
+
+Fixed an issue where boycott company details would fail to load with error:
+```
+Error getting boycott company details for ID boycott-2: TypeError: this.apiClient.getDocument is not a function (it is undefined)
+```
+
+This was resolved by:
+- Correctly initializing the boycottService through the API context instead of directly instantiating it
+- Using the useApi() hook to access properly initialized services
+- This fix ensures proper API client injection in service classes
+
+### Firestore Collection Initialization Scripts
+
+Added tools to simplify Firestore database setup for new developers:
+- `verify-collections.js`: Checks which collections exist and have data
+- `init-firestore-collections.js`: Creates sample documents in all required collections
+- `FIREBASE_SETUP.md`: Comprehensive documentation for Firebase setup
+
 ## Contributing
 
 1. Fork the repository
@@ -179,6 +198,158 @@ A new feature allowing users to browse and search for companies being boycotted 
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+## Firestore Collections Initialization
+
+Setting up the Firestore database for local development is now streamlined with dedicated scripts.
+
+### Collection Structure
+
+The app uses the following collections in Firestore:
+
+| Collection | Purpose |
+|------------|---------|
+| `boycottCompanies` | Companies being boycotted |
+| `achievements` | Available user achievements |
+| `announcements` | System and channel announcements |
+| `channels` | Communication channels |
+| `channelSubscriptions` | User subscriptions to channels |
+| `protestEvents` | Protest event details |
+| `attendanceRecords` | User attendance records |
+| `users` | User profiles and settings |
+
+### Initialization Steps
+
+1. Install the Firebase Admin SDK:
+```bash
+npm install firebase-admin
+```
+
+2. Generate a Firebase service account key (see FIREBASE_SETUP.md for details)
+
+3. Run the verification script to check your database:
+```bash
+node verify-collections.js
+```
+
+4. Run the initialization script to create collections and sample data:
+```bash
+node init-firestore-collections.js
+```
+
+For detailed instructions, refer to [FIREBASE_SETUP.md](./FIREBASE_SETUP.md).
+
+## API Architecture
+
+The app uses a structured API architecture to interact with Firebase services:
+
+### API Client & Services Pattern
+
+- `apiClient.ts`: Central client handling Firebase operations and authentication 
+- Service Classes: Domain-specific services that use the apiClient (e.g., boycottService, userService)
+- API Context: React context providing services to components
+
+### Service Initialization
+
+Services are properly initialized through the ApiProvider:
+
+```jsx
+// In ApiContext.tsx
+export const ApiProvider = ({ children }) => {
+  const apiClient = getApiClient(); // Singleton instance
+  
+  // Initialize services with the API client
+  const userService = new UserService(apiClient);
+  const boycottService = new BoycottService(apiClient);
+  // ... other services
+  
+  return (
+    <ApiContext.Provider value={{ userService, boycottService, ... }}>
+      {children}
+    </ApiContext.Provider>
+  );
+};
+
+// In components - CORRECT usage
+function MyComponent() {
+  const { boycottService } = useApi();
+  // boycottService is properly initialized
+}
+
+// INCORRECT usage (will cause errors)
+const boycottService = new BoycottService({});
+// apiClient is an empty object, methods will be undefined
+```
+
+### Common API Errors
+
+1. **undefined method errors**: Usually caused by improper service initialization. Always use the `useApi()` hook to get services.
+
+2. **Permission errors**: Check Firebase security rules and ensure the user is authenticated.
+
+3. **Missing or insufficient permissions**: Verify security rules for the collection you're accessing.
+
+4. **Network errors**: Often occur when Firestore handlers aren't implemented for specific endpoints.
+
+## Firebase Security Rules
+
+The app uses custom Firestore security rules to control data access:
+
+### Security Model Overview
+
+- **Public Reading**: Some collections allow unauthenticated reads (boycottCompanies, channels, announcements)
+- **Authenticated Reads**: Most data requires authentication to read
+- **Owner-Based Write Permissions**: Users can only modify their own data
+- **Collection-Specific Rules**: Each collection has tailored security rules
+
+### Key Rules Implementation
+
+```javascript
+// Example security rule pattern
+match /userSettings/{userId} {
+  // Allow authenticated users to read
+  allow read: if request.auth != null;
+  // Only allow document owner to write
+  allow write: if request.auth != null && request.auth.uid == userId;
+}
+```
+
+### Deploying Rules
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+For a complete reference of rules, see `firestore.rules` in the project.
+
+## Troubleshooting Common Issues
+
+### API Client Errors
+
+1. **"getDocument is not a function"**
+   - **Cause**: Service initialized with empty object instead of apiClient
+   - **Solution**: Use the useApi() hook to get properly initialized services
+   - **Example**: `const { boycottService } = useApi();`
+
+2. **"Missing or insufficient permissions"**
+   - **Cause**: Firebase security rules blocking access
+   - **Solution**: Check security rules for the collection and ensure user is authenticated
+   - **Debug**: Enable Firebase debug mode to see detailed permission errors
+
+3. **"Network error. Please check your connection."**
+   - **Cause**: Often happens when a handler for an API endpoint is missing
+   - **Solution**: Implement proper API handlers in apiClient.ts
+   - **Example**: Add a case for your endpoint in the get/post methods
+
+### Firebase Setup Issues
+
+1. **"Service account key not found"**
+   - **Solution**: Generate a key from Firebase Console and save as `firebase-service-account.json`
+
+2. **"Auth token refresh failed"**
+   - **Solution**: Sign out and sign in again to refresh authentication
+
+For more troubleshooting tips, see the [Firebase documentation](https://firebase.google.com/docs/firestore/troubleshooting).
 
 ## License
 
