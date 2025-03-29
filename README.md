@@ -22,6 +22,24 @@ A mobile application built with React Native and Expo for tracking and managing 
 
 ## Recent Updates
 
+### Complete Turkish Translation
+- Translated all app content into Turkish for better accessibility
+- Localized user interface elements, button labels, and system messages
+- Complete onboarding process now available in Turkish
+- Adapted all error messages and notifications for Turkish language
+
+### Enhanced Onboarding Flow
+- Improved 5-step onboarding process with visual progress indicators
+- Redesigned avatar selection screen with smoother navigation
+- Enhanced user experience for first-time users
+- Improved password creation and confirmation fields
+
+### iOS Usability Improvements
+- Fixed iOS password autofill functionality for better visibility and security
+- Enhanced color contrast during password creation with iOS autofill suggestions
+- Improved input field behaviors for better iOS compatibility
+- Consistent navigation controls across all screens
+
 ### Location Services Integration
 - Added quick access buttons to important locations:
   - "Gözaltı Kremi Lokasyonları" (halkharita.com)
@@ -331,12 +349,13 @@ eas submit -p ios --profile test
 
 ## Privacy-Focused Authentication
 
-Boykot App is committed to user privacy. We have specifically designed our authentication system to NOT collect any personal information:
+Gompile is committed to user privacy. We have specifically designed our authentication system to NOT collect any personal information:
 
 - We use username-based authentication instead of email/phone
 - No personal identifiable information is collected or stored
 - User data is stored locally and only shared with our servers when necessary for core functionality
 - All stored preferences are kept anonymous and not tied to real identities
+- Development mode with local authentication for testing without Firebase setup
 
 This approach helps protect user privacy while still providing necessary account functionality for accessing the app's features. Users can create an account with just a username and password, with no email verification or phone number required.
 
