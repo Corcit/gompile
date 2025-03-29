@@ -54,6 +54,47 @@ export default function HomeScreen() {
     longestStreak: 5,
   };
 
+  // Map attendance stats to the format expected by TamiratStats
+  const mapStatsForUI = (stats: AttendanceStats | null) => {
+    if (!stats) {
+      // Return zeros instead of mock data when no stats available
+      return {
+        protestsAttended: 0,
+        rank: 'Yeni Başlayan',
+        badges: 0,
+        streak: 0,
+        totalHours: 0,
+        lastAttendance: '',
+        verifiedAttendances: 0,
+        longestStreak: 0,
+      };
+    }
+
+    // Calculate rank based on total attendance
+    let rank = 'Yeni Başlayan';
+    if (stats.totalAttended >= 20) {
+      rank = 'Uzman Aktivist';
+    } else if (stats.totalAttended >= 10) {
+      rank = 'Deneyimli Aktivist';
+    } else if (stats.totalAttended >= 5) {
+      rank = 'Deneyimli Tesisatçı';
+    } else if (stats.totalAttended >= 1) {
+      rank = 'Başlangıç Tesisatçı';
+    }
+
+    // Map the stats
+    return {
+      protestsAttended: stats.totalAttended,
+      rank: rank,
+      badges: Math.floor(stats.totalAttended / 3), // Estimate: 1 badge per 3 attendances
+      streak: stats.streakCurrent,
+      totalHours: stats.totalAttended * 3, // Estimate: 3 hours per attendance
+      lastAttendance: stats.lastAttendance ? stats.lastAttendance.toISOString().split('T')[0] : '',
+      verifiedAttendances: stats.verified,
+      longestStreak: stats.streakLongest,
+    };
+  };
+
   // Load attendance data
   const loadData = useCallback(async () => {
     try {
@@ -220,7 +261,7 @@ export default function HomeScreen() {
       {/* Content based on active tab */}
       {activeTab === 'stats' ? (
         <TamiratStats
-          stats={userStats}
+          stats={mapStatsForUI(attendanceStats)}
           isDark={isDark}
           onSeeAllStats={() => console.log('View all stats')}
         />
