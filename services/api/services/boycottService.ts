@@ -1,9 +1,22 @@
 import { BoycottCompany, BoycottSearchParams, BoycottSearchResult } from '../models/BoycottCompany';
+import { DocumentSnapshot } from 'firebase/firestore';
 
-// Define a minimal interface for the API client
+// Define interface for the API client to use Firestore methods
 interface ApiClientInterface {
-  get?: (url: string, config?: any) => Promise<any>;
-  post?: (url: string, data?: any, config?: any) => Promise<any>;
+  getDocuments<T>(
+    collectionName: string,
+    filters?: { field: string; operator: any; value: any }[],
+    sortBy?: { field: string; direction: 'asc' | 'desc' },
+    pagination?: { pageSize: number; startAfter?: DocumentSnapshot }
+  ): Promise<{ data: T[]; lastDoc?: DocumentSnapshot }>;
+  
+  getDocument<T>(collectionName: string, documentId: string): Promise<T | null>;
+  
+  addDocument<T>(collectionName: string, data: any): Promise<T>;
+  
+  updateDocument<T>(collectionName: string, documentId: string, data: any): Promise<T>;
+  
+  deleteDocument(collectionName: string, documentId: string): Promise<boolean>;
 }
 
 /**
@@ -11,65 +24,7 @@ interface ApiClientInterface {
  */
 export default class BoycottService {
   private apiClient: ApiClientInterface;
-  
-  // Mock data for development
-  private mockBoycottCompanies: BoycottCompany[] = [
-    {
-      id: '1',
-      name: 'CoffeeMax',
-      logo: 'https://via.placeholder.com/150',
-      category: 'gıda',
-      reason: 'Labor abuses and unfair working conditions',
-      startDate: '2023-05-15',
-      description: 'CoffeeMax has been documented to use exploitative labor practices in their supply chain, with workers being paid below living wage and forced to work excessive hours in poor conditions.',
-      alternativeCompanies: ['Fair Trade Coffee', 'Local Brew'],
-      link: 'https://example.com/coffeemax-issues'
-    },
-    {
-      id: '2',
-      name: 'TechGiant',
-      logo: 'https://via.placeholder.com/150',
-      category: 'teknoloji',
-      reason: 'Privacy violations and data exploitation',
-      startDate: '2023-02-10',
-      description: 'TechGiant has repeatedly violated user privacy, selling personal data without consent and implementing invasive tracking mechanisms across their platforms.',
-      alternativeCompanies: ['PrivacyTech', 'OpenSource Solutions'],
-      link: 'https://example.com/techgiant-privacy'
-    },
-    {
-      id: '3',
-      name: 'FastFashion Co',
-      logo: 'https://via.placeholder.com/150',
-      category: 'giyim',
-      reason: 'Environmental damage and sweatshop conditions',
-      startDate: '2022-11-22',
-      description: 'FastFashion Co has been linked to severe environmental pollution in manufacturing countries and employs workers in dangerous sweatshop conditions with minimal pay.',
-      alternativeCompanies: ['EthicalWear', 'Sustainable Clothing'],
-      link: 'https://example.com/fastfashion-report'
-    },
-    {
-      id: '4',
-      name: 'OilCorp',
-      logo: 'https://via.placeholder.com/150',
-      category: 'enerji',
-      reason: 'Climate change denial and environmental destruction',
-      startDate: '2021-08-30',
-      description: 'OilCorp has funded climate change denial groups while continuing to expand fossil fuel extraction, leading to documented environmental disasters in protected areas.',
-      alternativeCompanies: ['GreenEnergy', 'SustainablePower'],
-      link: 'https://example.com/oilcorp-climate'
-    },
-    {
-      id: '5',
-      name: 'AgriGlobal',
-      logo: 'https://via.placeholder.com/150',
-      category: 'tarım',
-      reason: 'GMO controversies and farmer exploitation',
-      startDate: '2022-03-14',
-      description: 'AgriGlobal has been accused of forcing harmful contracts on small farmers, monopolizing seed markets, and causing ecological damage through aggressive pesticide use.',
-      alternativeCompanies: ['OrganicFarms', 'LocalGrow'],
-      link: 'https://example.com/agriglobal-practices'
-    }
-  ];
+  private readonly COLLECTION_NAME = 'boycottCompanies';
   
   constructor(apiClient: ApiClientInterface) {
     this.apiClient = apiClient;
@@ -82,35 +37,50 @@ export default class BoycottService {
    */
   async searchBoycottCompanies(params: BoycottSearchParams): Promise<BoycottSearchResult> {
     try {
-      // In a real implementation, we would call the API
-      // return this.apiClient.get('/boycott/search', { params });
-      
-      // For now, use mock data
       const { query = '', category, limit = 10, offset = 0 } = params;
       
-      // Filter by query and category
-      let filteredCompanies = this.mockBoycottCompanies;
-      
-      if (query) {
-        const lowerQuery = query.toLowerCase();
-        filteredCompanies = filteredCompanies.filter(company => 
-          company.name.toLowerCase().includes(lowerQuery) || 
-          company.description.toLowerCase().includes(lowerQuery)
-        );
-      }
+      // Build filters based on parameters
+      const filters = [];
       
       if (category) {
-        filteredCompanies = filteredCompanies.filter(company => 
-          company.category === category
-        );
+        filters.push({
+          field: 'category',
+          operator: '==',
+          value: category
+        });
       }
       
-      // Apply pagination
-      const paginatedCompanies = filteredCompanies.slice(offset, offset + limit);
+      // Add query filter if provided - note: this is a simplified approach
+      // In a real implementation, you might use a more sophisticated search like
+      // Firestore's array-contains or compound queries
+      if (query) {
+        // This will search for the query string in the name field
+        // A more robust solution would use a search index or create
+        // searchable tokens in the documents
+        filters.push({
+          field: 'name',
+          operator: '>=',
+          value: query
+        });
+        
+        filters.push({
+          field: 'name',
+          operator: '<=',
+          value: query + '\uf8ff'
+        });
+      }
+      
+      // Get all documents with the applied filters
+      const result = await this.apiClient.getDocuments<BoycottCompany>(
+        this.COLLECTION_NAME,
+        filters,
+        { field: 'name', direction: 'asc' },
+        { pageSize: limit }
+      );
       
       return {
-        companies: paginatedCompanies,
-        total: filteredCompanies.length
+        companies: result.data,
+        total: result.data.length // This is an approximation, ideally we'd get the total count
       };
     } catch (error) {
       console.error('Error searching boycott companies:', error);
@@ -125,10 +95,6 @@ export default class BoycottService {
    */
   async getBoycottCompanyDetails(companyId: string | string[] | number | null | undefined): Promise<BoycottCompany | null> {
     try {
-      // In a real implementation, we would call the API
-      // return this.apiClient.get(`/boycott/company/${companyId}`);
-      
-      // For now, use mock data
       if (!companyId) return null;
       
       // Handle both string and array cases from router params
@@ -142,8 +108,11 @@ export default class BoycottService {
       
       if (!stringId) return null;
       
-      const company = this.mockBoycottCompanies.find(c => c.id === stringId);
-      return company || null;
+      // Get the document from Firestore
+      return await this.apiClient.getDocument<BoycottCompany>(
+        this.COLLECTION_NAME, 
+        stringId
+      );
     } catch (error) {
       console.error(`Error getting boycott company details for ID ${companyId}:`, error);
       return null;
@@ -156,15 +125,76 @@ export default class BoycottService {
    */
   async getBoycottCategories(): Promise<string[]> {
     try {
-      // In a real implementation, we would call the API
-      // return this.apiClient.get('/boycott/categories');
+      // Get all documents to extract categories
+      // This is a simplified approach - in a production app, 
+      // you would likely have a separate collection for categories
+      // or use a more efficient query
+      const result = await this.apiClient.getDocuments<BoycottCompany>(
+        this.COLLECTION_NAME,
+        [],
+        undefined,
+        { pageSize: 100 } // Limit to prevent excessive reads
+      );
       
-      // For now, use mock data
-      const categories = Array.from(new Set(this.mockBoycottCompanies.map(c => c.category)));
+      // Extract unique categories
+      const categories = Array.from(
+        new Set(result.data.map(company => company.category))
+      );
+      
       return categories;
     } catch (error) {
       console.error('Error getting boycott categories:', error);
       return [];
+    }
+  }
+  
+  /**
+   * Adds a new boycott company
+   * @param company Company data
+   * @returns Added company
+   */
+  async addBoycottCompany(company: Omit<BoycottCompany, 'id'>): Promise<BoycottCompany> {
+    try {
+      return await this.apiClient.addDocument<BoycottCompany>(
+        this.COLLECTION_NAME,
+        company
+      );
+    } catch (error) {
+      console.error('Error adding boycott company:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Updates a boycott company
+   * @param id Company ID
+   * @param data Company data
+   * @returns Updated company
+   */
+  async updateBoycottCompany(id: string, data: Partial<BoycottCompany>): Promise<BoycottCompany> {
+    try {
+      return await this.apiClient.updateDocument<BoycottCompany>(
+        this.COLLECTION_NAME,
+        id,
+        data
+      );
+    } catch (error) {
+      console.error(`Error updating boycott company with ID ${id}:`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Deletes a boycott company
+   * @param id Company ID
+   * @returns Success status
+   */
+  async deleteBoycottCompany(id: string): Promise<boolean> {
+    try {
+      return await this.apiClient.deleteDocument(this.COLLECTION_NAME, id);
+    } catch (error) {
+      console.error(`Error deleting boycott company with ID ${id}:`, error);
+      throw error;
     }
   }
 } 

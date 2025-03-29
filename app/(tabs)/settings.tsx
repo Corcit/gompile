@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useColorScheme } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RoundedCard from '../../components/ui/RoundedCard';
@@ -22,10 +23,12 @@ import { useUserService } from '../../services/api/hooks/useUserService';
 import { UserSettings } from '../../services/api/models/UserProfile';
 import EditProfileModal from '../../components/settings/EditProfileModal';
 import PrivacyPolicyModal from '../../components/settings/PrivacyPolicyModal';
+import { useAuth } from '../../services/api/AuthContext';
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { logout } = useAuth();
   
   const userService = useUserService();
   const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -40,10 +43,26 @@ export default function SettingsScreen() {
   
   const loadUserSettings = async () => {
     try {
+      console.log('Attempting to load user settings...');
       const userSettings = await userService.getUserSettings();
+      console.log('User settings loaded successfully:', userSettings);
       setSettings(userSettings);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load user settings');
+      console.error('Failed to load user settings:', error);
+      Alert.alert(
+        'Error Loading Settings',
+        'Could not load your settings. Please check your internet connection and try again.',
+        [
+          {
+            text: 'Try Again',
+            onPress: () => loadUserSettings()
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          }
+        ]
+      );
     } finally {
       setIsLoading(false);
     }
@@ -132,8 +151,8 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await userService.signOut();
-              // Handle successful sign out
+              await logout();
+              router.replace('/login');
             } catch (error) {
               console.error('Error signing out:', error);
               Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
@@ -199,9 +218,6 @@ export default function SettingsScreen() {
             <View style={styles.profileText}>
               <Text style={[styles.nickname, isDark && styles.darkText]}>
                 {settings?.nickname || 'İsimsiz Kullanıcı'}
-              </Text>
-              <Text style={[styles.email, isDark && styles.darkSubText]}>
-                E-posta yok
               </Text>
             </View>
           </View>
@@ -436,10 +452,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.dark.text,
     marginBottom: 4,
-  },
-  email: {
-    fontSize: 14,
-    color: Colors.dark.text + '80',
   },
   editButton: {
     marginTop: 16,

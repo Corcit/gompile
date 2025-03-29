@@ -177,18 +177,14 @@ export default function AvatarSelectionScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
-        </TouchableOpacity>
-        
-        <View style={styles.progressIndicator}>
-          <View style={styles.progressDot} />
-          <View style={[styles.progressDot, styles.activeDot]} />
-          <View style={styles.progressDot} />
-          <View style={styles.progressDot} />
+        <View style={{width: 30}} />
+        <Text style={styles.appName}>Gompile</Text>
+        <View style={styles.stepIndicatorContainer}>
+          <View style={styles.stepDot} />
+          <View style={styles.stepDot} />
+          <View style={[styles.stepDot, styles.activeDot]} />
+          <View style={styles.stepDot} />
+          <View style={styles.stepDot} />
         </View>
       </View>
 
@@ -197,16 +193,16 @@ export default function AvatarSelectionScreen() {
       </View>
       
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Choose Your Avatar</Text>
+        <Text style={styles.title}>Avatarınızı Seçin</Text>
         <Text style={styles.subtitle}>
-          Select an avatar to represent you in the community
+          Toplulukta sizi temsil edecek bir avatar seçin
         </Text>
       </View>
 
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.dark.secondary} />
-          <Text style={styles.loadingText}>Loading avatars...</Text>
+          <Text style={styles.loadingText}>Avatarlar yükleniyor...</Text>
         </View>
       ) : (
         <RoundedCard style={styles.avatarContainer}>
@@ -223,7 +219,7 @@ export default function AvatarSelectionScreen() {
 
       <View style={styles.navigation}>
         <RoundedButton
-          title="Continue"
+          title="Devam Et"
           onPress={handleContinue}
           disabled={!selectedAvatar || submitting}
           loading={submitting}
@@ -247,25 +243,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    width: '100%',
   },
   backButton: {
     padding: 8,
+    borderRadius: 8,
   },
-  progressIndicator: {
+  appName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.dark.text,
+  },
+  stepIndicatorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  progressDot: {
+  stepDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.dark.navyPurple,
+    backgroundColor: Colors.dark.tint + '30',
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: Colors.dark.secondary,
-    width: 20,
+    backgroundColor: Colors.dark.tint,
   },
   mascotContainer: {
     alignItems: 'center',

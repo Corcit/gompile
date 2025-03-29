@@ -5,7 +5,7 @@ import { Colors } from '../../constants/Colors';
 
 const TIPS = [
   "Tamirata giderken telefonunuzu şarj etmeyi ve su almayı unutmayın!",
-  "Tamirat sırasında sıcağa dayanıklı eldiven veya örgü eldiven kullanmayı ihmal etmeyin!",
+  "Tamirat için sıcağa dayanıklı eldiven kullanın!",
   "Tamirat öncesi talsit hazırlamayı unutmayın, gözlerin yaşarmasın.",
   "Tamiratta 2-3 kişilik gruplar halinde birbirinizi kaybetmeden durmayı unutmayın.",
   "Acil durumlar için yakınlarınıza konum atmayı unutmayın!",
@@ -13,23 +13,24 @@ const TIPS = [
   "Tamirata giderken rahat ve hızlı hareket edebileceğiniz kıyafetler giyin."
 ];
 
-interface TamiratStatsProps {
+export interface TamiratStatsProps {
   stats: {
     protestsAttended: number;
+    rank: string;
     badges: number;
     streak: number;
-    rank: string;
     totalHours: number;
+    lastAttendance: string;
     verifiedAttendances: number;
     longestStreak: number;
-    lastAttendance: string;
   };
+  isDark?: boolean;
   onSeeAllStats?: () => void;
 }
 
-export default function TamiratStats({ stats, onSeeAllStats }: TamiratStatsProps) {
+export default function TamiratStats({ stats, isDark = true, onSeeAllStats }: TamiratStatsProps) {
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDarkMode = colorScheme === 'dark';
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
   useEffect(() => {
@@ -42,19 +43,19 @@ export default function TamiratStats({ stats, onSeeAllStats }: TamiratStatsProps
 
   return (
     <View style={styles.container}>
-      <View style={[styles.tipContainer, isDark && styles.darkTipContainer]}>
+      <View style={[styles.tipContainer, isDarkMode && styles.darkTipContainer]}>
         <MaterialIcons
           name="lightbulb"
           size={24}
-          color={isDark ? Colors.dark.text : Colors.light.text}
+          color={isDarkMode ? Colors.dark.text : Colors.light.text}
           style={styles.tipIcon}
         />
-        <Text style={[styles.tipText, isDark && styles.darkText]}>
+        <Text style={[styles.tipText, isDarkMode && styles.darkText]}>
           {TIPS[currentTipIndex]}
         </Text>
       </View>
 
-      <Text style={[styles.title, isDark && styles.darkText]}>
+      <Text style={[styles.title, isDarkMode && styles.darkText]}>
         Tamirat İstatistiklerin
       </Text>
 
@@ -65,10 +66,10 @@ export default function TamiratStats({ stats, onSeeAllStats }: TamiratStatsProps
             size={32}
             color={Colors[colorScheme || 'light'].tint}
           />
-          <Text style={[styles.statValue, isDark && styles.darkText]}>
+          <Text style={[styles.statValue, isDarkMode && styles.darkText]}>
             {stats.protestsAttended}
           </Text>
-          <Text style={[styles.statLabel, isDark && styles.darkSubText]}>
+          <Text style={[styles.statLabel, isDarkMode && styles.darkSubText]}>
             Tamirat
           </Text>
         </View>
@@ -79,10 +80,10 @@ export default function TamiratStats({ stats, onSeeAllStats }: TamiratStatsProps
             size={32}
             color={Colors[colorScheme || 'light'].tint}
           />
-          <Text style={[styles.statValue, isDark && styles.darkText]}>
+          <Text style={[styles.statValue, isDarkMode && styles.darkText]}>
             {stats.badges}
           </Text>
-          <Text style={[styles.statLabel, isDark && styles.darkSubText]}>
+          <Text style={[styles.statLabel, isDarkMode && styles.darkSubText]}>
             Rozet
           </Text>
         </View>
@@ -93,20 +94,20 @@ export default function TamiratStats({ stats, onSeeAllStats }: TamiratStatsProps
             size={32}
             color={Colors[colorScheme || 'light'].tint}
           />
-          <Text style={[styles.statValue, isDark && styles.darkText]}>
+          <Text style={[styles.statValue, isDarkMode && styles.darkText]}>
             {stats.streak}
           </Text>
-          <Text style={[styles.statLabel, isDark && styles.darkSubText]}>
+          <Text style={[styles.statLabel, isDarkMode && styles.darkSubText]}>
             Haftalık Seri
           </Text>
         </View>
       </View>
 
       <View style={styles.rankContainer}>
-        <Text style={[styles.rankLabel, isDark && styles.darkSubText]}>
+        <Text style={[styles.rankLabel, isDarkMode && styles.darkSubText]}>
           Mevcut rütben:
         </Text>
-        <Text style={[styles.rankValue, isDark && styles.darkText]}>
+        <Text style={[styles.rankValue, isDarkMode && styles.darkText]}>
           Deneyimli Tesisatçı
         </Text>
         {onSeeAllStats && (

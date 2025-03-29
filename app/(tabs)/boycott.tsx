@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { BoycottCompany, BoycottSearchParams } from '../../services/api/models/BoycottCompany';
-import BoycottService from '../../services/api/services/boycottService';
+import { boycottService } from '../../services/api';
+import { useApi } from '../../services/api/ApiContext';
 
 export default function BoycottScreen() {
   // Using dark theme as required by the app
@@ -12,15 +13,14 @@ export default function BoycottScreen() {
   const colors = Colors[colorScheme];
   
   const router = useRouter();
+  const { boycottService } = useApi(); // Get boycottService from context
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<BoycottCompany[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [totalResults, setTotalResults] = useState(0);
-
-  // Initialize services
-  const boycottService = new BoycottService({});
 
   useEffect(() => {
     // Load categories and initial companies
@@ -30,10 +30,13 @@ export default function BoycottScreen() {
 
   const loadCategories = async () => {
     try {
+      setLoading(true);
       const categoryList = await boycottService.getBoycottCategories();
       setCategories(categoryList);
     } catch (error) {
       console.error('Failed to load categories:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,13 +72,18 @@ export default function BoycottScreen() {
     } as any);  // Type assertion to avoid TypeScript errors
   };
 
+  // Update search when category changes
+  useEffect(() => {
+    searchCompanies();
+  }, [selectedCategory]);
+
   const renderCompanyItem = ({ item }: { item: BoycottCompany }) => (
     <TouchableOpacity 
       style={styles.companyCard}
       onPress={() => handleCompanyPress(item)}
     >
       <Image 
-        source={{ uri: item.logo }} 
+        source={{ uri: item.logo || 'https://via.placeholder.com/150' }} 
         style={styles.companyLogo}
         resizeMode="contain"
       />

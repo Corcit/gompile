@@ -59,9 +59,10 @@ export default function NotificationsScreen() {
           <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
         </TouchableOpacity>
         
-        <Text style={styles.appName}>Boykot App</Text>
+        <Text style={styles.appName}>Gompile</Text>
         
         <View style={styles.stepIndicatorContainer}>
+          <View style={styles.stepDot} />
           <View style={styles.stepDot} />
           <View style={styles.stepDot} />
           <View style={styles.stepDot} />
@@ -78,10 +79,10 @@ export default function NotificationsScreen() {
         </View>
 
         <RoundedCard style={styles.contentCard}>
-          <View style={styles.header}>
-            <Text style={[styles.title, isDark && styles.titleDark]}>Stay Updated</Text>
+          <View style={styles.titleSection}>
+            <Text style={[styles.title, isDark && styles.titleDark]}>Güncel Kalın</Text>
             <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>
-              Never miss an important protest or announcement
+              Önemli protesto veya duyuruları kaçırmayın
             </Text>
           </View>
 
@@ -94,9 +95,9 @@ export default function NotificationsScreen() {
                   color={Colors[colorScheme].tint} 
                 />
                 <View style={styles.optionTextContent}>
-                  <Text style={[styles.optionTitle, isDark && styles.optionTitleDark]}>Push Notifications</Text>
+                  <Text style={[styles.optionTitle, isDark && styles.optionTitleDark]}>Anlık Bildirimler</Text>
                   <Text style={[styles.optionDescription, isDark && styles.optionDescriptionDark]}>
-                    Receive updates about protests, announcements, and community alerts
+                    Protestolar, duyurular ve topluluk uyarıları hakkında güncellemeler alın
                   </Text>
                 </View>
               </View>
@@ -116,7 +117,7 @@ export default function NotificationsScreen() {
           <View style={[styles.infoContainer, isDark && styles.infoContainerDark]}>
             <MaterialIcons name="privacy-tip" size={20} color={isDark ? "#aaa" : "#888"} />
             <Text style={[styles.infoText, isDark && styles.infoTextDark]}>
-              You can change these settings anytime in your profile. We value your privacy and will only use notifications to enhance your activism experience.
+              Bu ayarları istediğiniz zaman profilinizden değiştirebilirsiniz. Gizliliğinize değer veriyoruz ve bildirimleri yalnızca aktivizm deneyiminizi geliştirmek için kullanacağız.
             </Text>
           </View>
         </RoundedCard>
@@ -124,14 +125,14 @@ export default function NotificationsScreen() {
 
       <View style={styles.buttonContainer}>
         <RoundedButton 
-          title="Skip"
+          title="Atla"
           variant="outline"
           onPress={() => completeOnboarding()}
           style={styles.skipButton}
           disabled={isSubmitting}
         />
         <RoundedButton 
-          title="Continue"
+          title="Devam Et"
           variant="primary"
           onPress={completeOnboarding}
           style={styles.continueButton}
@@ -215,7 +216,9 @@ const styles = StyleSheet.create({
   },
   mascotContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    justifyContent: 'center',
+    marginVertical: 20,
+    height: 120,
   },
   contentCard: {
     marginBottom: 20,
@@ -237,6 +240,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666',
     lineHeight: 22,
+    paddingHorizontal: 10,
+    marginBottom: 20,
   },
   subtitleDark: {
     color: '#aaa',
@@ -308,5 +313,9 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     flex: 2,
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: 10,
   },
 }); 

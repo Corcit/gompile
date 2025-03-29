@@ -12,15 +12,33 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.coruh.gompile",
+      "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ],
+        "NSCameraUsageDescription": "This app uses the camera to let you upload profile pictures and content images.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos to let you upload images for your profile and content."
+      },
+      "associatedDomains": [
+        "applinks:gompile.app"
+      ]
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.coruh.gompile",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -49,6 +67,13 @@
       "eas": {
         "projectId": "0ed2b734-777c-4b3a-93f2-195213e654e9"
       }
-    }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0ed2b734-777c-4b3a-93f2-195213e654e9"
+    },
+    "owner": "coruh"
   }
 }

@@ -82,16 +82,19 @@ export default function ExperienceScreen() {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => router.push('/onboarding/avatar')}
         >
           <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
         </TouchableOpacity>
         
-        <View style={styles.progressIndicator}>
-          <View style={styles.progressDot} />
-          <View style={styles.progressDot} />
-          <View style={[styles.progressDot, styles.activeDot]} />
-          <View style={styles.progressDot} />
+        <Text style={styles.appName}>Gompile</Text>
+        
+        <View style={styles.stepIndicatorContainer}>
+          <View style={styles.stepDot} />
+          <View style={styles.stepDot} />
+          <View style={styles.stepDot} />
+          <View style={[styles.stepDot, styles.activeDot]} />
+          <View style={styles.stepDot} />
         </View>
       </View>
 
@@ -202,25 +205,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    width: '100%',
   },
   backButton: {
     padding: 8,
+    borderRadius: 8,
   },
-  progressIndicator: {
+  appName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.dark.text,
+  },
+  stepIndicatorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  progressDot: {
+  stepDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.dark.navyPurple,
+    backgroundColor: Colors.dark.tint + '30',
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: Colors.dark.secondary,
-    width: 20,
+    backgroundColor: Colors.dark.tint,
   },
   titleContainer: {
     alignItems: 'center',

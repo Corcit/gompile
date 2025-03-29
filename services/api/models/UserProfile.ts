@@ -19,8 +19,15 @@ export interface Achievement {
   id: string;
   name: string;
   description: string;
-  imageUrl: string;
+  imageUrl: string | null;
   unlockedAt?: string;
+  iconUrl?: string | null;
+  requirement?: {
+    type: string;
+    target: number;
+    current?: number;
+  };
+  progress?: number;
 }
 
 /**

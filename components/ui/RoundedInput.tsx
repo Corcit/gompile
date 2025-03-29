@@ -8,6 +8,7 @@ import {
   TextStyle,
   StyleProp,
   TextInputProps,
+  Platform,
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
 
@@ -31,8 +32,18 @@ const RoundedInput: React.FC<RoundedInputProps> = ({
   errorStyle,
   leftIcon,
   rightIcon,
+  secureTextEntry,
   ...props
 }) => {
+  // iOS specific password input attributes
+  const passwordAttributes = Platform.OS === 'ios' && secureTextEntry ? {
+    // Help iOS recognize this as a password field
+    passwordRules: 'required: upper; required: lower; required: digit; max-consecutive: 2; minlength: 8;',
+    // Use a valid textContentType value to prevent yellow background
+    textContentType: 'oneTimeCode' as const, // This won't trigger the yellow background
+    // No need for style here, we'll apply it directly
+  } : {};
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
@@ -43,6 +54,8 @@ const RoundedInput: React.FC<RoundedInputProps> = ({
       <View style={[
         styles.inputContainer,
         error ? styles.inputError : null,
+        // Apply a dark background for password fields on iOS to override the yellow
+        Platform.OS === 'ios' && secureTextEntry ? styles.iosPasswordField : null,
       ]}>
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
         <TextInput
@@ -51,8 +64,12 @@ const RoundedInput: React.FC<RoundedInputProps> = ({
             inputStyle,
             leftIcon ? { paddingLeft: 40 } : null,
             rightIcon ? { paddingRight: 40 } : null,
+            // Apply text styling for password fields on iOS
+            Platform.OS === 'ios' && secureTextEntry ? styles.iosPasswordText : null,
           ]}
           placeholderTextColor={Colors.dark.placeholder}
+          secureTextEntry={secureTextEntry}
+          {...passwordAttributes}
           {...props}
         />
         {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
@@ -93,6 +110,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     borderRadius: 16,
+  },
+  // New styles for iOS password fields
+  iosPasswordField: {
+    backgroundColor: '#2A2A36', // Much darker background to override the yellow
+  },
+  iosPasswordText: {
+    color: '#FFFFFF', // White text for better contrast on dark background
   },
   iconLeft: {
     position: 'absolute',

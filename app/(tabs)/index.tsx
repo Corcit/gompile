@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
+  Alert,
 } from 'react-native';
 import { MaterialIcons, Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -19,6 +20,8 @@ import RoundedCard from '../../components/ui/RoundedCard';
 import { attendanceService, userService } from '../../services/api';
 import { AttendanceStats } from '../../services/api/models/Attendance';
 import TamiratStats from '../../components/attendance/TamiratStats';
+import { useAuth } from '../../services/api/AuthContext';
+import { useRouter } from 'expo-router';
 
 // Get screen dimensions
 const { width } = Dimensions.get('window');
@@ -167,25 +170,7 @@ export default function HomeScreen() {
         />
       }
     >
-      {/* Location Buttons */}
-      <View style={styles.locationButtonsContainer}>
-        <TouchableOpacity
-          style={[styles.locationButton, { backgroundColor: Colors.light.error }]}
-          onPress={() => openWebsite('https://halkharita.com')}
-        >
-          <MaterialIcons name="location-on" size={24} color="white" />
-          <Text style={styles.locationButtonText}>Gözaltı Kremi Lokasyonları</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.locationButton, { backgroundColor: Colors.light.tint }]}
-          onPress={() => openWebsite('https://ozgurlukharitasi.com')}
-        >
-          <MaterialIcons name="map" size={24} color="white" />
-          <Text style={styles.locationButtonText}>Tamirat Lokasyonları</Text>
-        </TouchableOpacity>
-      </View>
-
+      {/* Tabs for stats and calendar */}
       <View style={[styles.header, isDark && styles.darkHeader]}>
         <View style={[styles.tabsContainer, isDark && styles.darkTabsContainer]}>
           <TouchableOpacity
@@ -193,7 +178,7 @@ export default function HomeScreen() {
               styles.tab,
               activeTab === 'stats' && styles.activeTab,
               isDark && styles.darkTab,
-              activeTab === 'stats' && isDark && styles.darkActiveTab,
+              activeTab === 'stats' && isDark && styles.darkActiveTab
             ]}
             onPress={() => setActiveTab('stats')}
           >
@@ -202,18 +187,19 @@ export default function HomeScreen() {
                 styles.tabText,
                 activeTab === 'stats' && styles.activeTabText,
                 isDark && styles.darkTabText,
-                activeTab === 'stats' && isDark && styles.darkActiveTabText,
+                activeTab === 'stats' && isDark && styles.darkActiveTabText
               ]}
             >
               İstatistikler
             </Text>
           </TouchableOpacity>
+          
           <TouchableOpacity
             style={[
               styles.tab,
               activeTab === 'calendar' && styles.activeTab,
               isDark && styles.darkTab,
-              activeTab === 'calendar' && isDark && styles.darkActiveTab,
+              activeTab === 'calendar' && isDark && styles.darkActiveTab
             ]}
             onPress={() => setActiveTab('calendar')}
           >
@@ -222,7 +208,7 @@ export default function HomeScreen() {
                 styles.tabText,
                 activeTab === 'calendar' && styles.activeTabText,
                 isDark && styles.darkTabText,
-                activeTab === 'calendar' && isDark && styles.darkActiveTabText,
+                activeTab === 'calendar' && isDark && styles.darkActiveTabText
               ]}
             >
               Takvim
@@ -231,10 +217,12 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {/* Content based on active tab */}
       {activeTab === 'stats' ? (
         <TamiratStats
           stats={userStats}
-          onSeeAllStats={() => {/* Navigate to detailed stats */}}
+          isDark={isDark}
+          onSeeAllStats={() => console.log('View all stats')}
         />
       ) : (
         <RoundedCard style={styles.calendarContainer}>
@@ -259,6 +247,25 @@ export default function HomeScreen() {
           )}
         </RoundedCard>
       )}
+
+      {/* Location buttons moved to bottom */}
+      <View style={styles.homeButtonsContainer}>
+        <TouchableOpacity
+          style={[styles.locationButton, { backgroundColor: Colors.light.error }]}
+          onPress={() => openWebsite('https://halkharita.com')}
+        >
+          <MaterialIcons name="location-on" size={24} color="white" />
+          <Text style={styles.locationButtonText}>Gözaltı Kremi{'\n'}Lokasyonları</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.locationButton, { backgroundColor: Colors.light.tint }]}
+          onPress={() => openWebsite('https://ozgurlukharitasi.com')}
+        >
+          <MaterialIcons name="map" size={24} color="white" />
+          <Text style={styles.locationButtonText}>Tamirat{'\n'}Lokasyonları</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -386,12 +393,18 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: 'center',
   },
-  locationButtonsContainer: {
+  homeButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     padding: 16,
     gap: 12,
+    marginTop: 16,
+    marginBottom: 80, // Add extra space at the bottom so buttons are visible above navigation tabs
   },
   locationButton: {
-    flexDirection: 'row',
+    flex: 1,
+    aspectRatio: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
     borderRadius: 12,
@@ -406,8 +419,9 @@ const styles = StyleSheet.create({
   },
   locationButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    marginLeft: 12,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

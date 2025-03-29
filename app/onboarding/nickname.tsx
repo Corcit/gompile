@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,8 +20,12 @@ import RoundedInput from '../../components/ui/RoundedInput';
 import RoundedButton from '../../components/ui/RoundedButton';
 import RoundedCard from '../../components/ui/RoundedCard';
 import Mascot from '../../components/mascot/Mascot';
+import { useAuth } from '../../services/api/AuthContext';
 
 export default function NicknameScreen() {
+  const { register, checkUsernameAvailability, isAuthenticated } = useAuth();
+  
+  const [isLogin, setIsLogin] = useState(false); // Default to register mode in onboarding
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -29,45 +33,100 @@ export default function NicknameScreen() {
   const [nicknameError, setNicknameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const [footerHeight, setFooterHeight] = useState(80); // Default height estimation
+
+  // Use debounce for username checking
+  const usernameTimeout = useRef<NodeJS.Timeout | null>(null);
+  
+  useEffect(() => {
+    // If user is already authenticated, redirect to main app
+    if (isAuthenticated) {
+      // Get the current user status from AsyncStorage
+      AsyncStorage.getItem('@auth:username').then(username => {
+        // Only redirect if we have a username stored, which means a real login not just anonymous auth
+        if (username) {
+          router.replace('/(tabs)');
+        }
+      });
+    }
+  }, [isAuthenticated]);
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
 
-  const validateNickname = (value: string) => {
-    if (!value.trim()) {
-      setNicknameError('Nickname cannot be empty');
+  // Debounced username validation
+  const validateUsernameDebounced = useCallback(async (value: string) => {
+    // Clear any existing timeout
+    if (usernameTimeout.current) {
+      clearTimeout(usernameTimeout.current);
+    }
+    
+    // Basic validation
+    const trimmedValue = value.trim();
+    
+    if (!trimmedValue) {
+      setNicknameError('Username cannot be empty');
+      return false;
+    }
+    
+    if (trimmedValue.length < 3) {
+      setNicknameError('Username must be at least 3 characters');
       return false;
     }
 
-    if (value.length < 3) {
-      setNicknameError('Nickname must be at least 3 characters');
+    if (trimmedValue.length > 20) {
+      setNicknameError('Username must be less than 20 characters');
       return false;
     }
-
-    if (value.length > 20) {
-      setNicknameError('Nickname must be less than 20 characters');
+    
+    // Check for invalid characters
+    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+    if (!usernameRegex.test(trimmedValue)) {
+      setNicknameError('Username can only contain letters, numbers, underscores, and hyphens');
       return false;
     }
-
-    // Check for inappropriate content - in a real app would call an API
-    if (value.toLowerCase().includes('offensive')) {
-      setNicknameError('This nickname contains inappropriate content');
-      return false;
+    
+    // If in registration mode, check if username exists after a delay
+    if (!isLogin) {
+      setNicknameError('Checking username availability...');
+      setCheckingUsername(true);
+      
+      usernameTimeout.current = setTimeout(async () => {
+        try {
+          const exists = await checkUsernameAvailability(trimmedValue);
+          if (exists) {
+            setNicknameError('Username already taken. Please choose another.');
+          } else {
+            setNicknameError('');
+          }
+        } catch (error) {
+          console.error('Error checking username:', error);
+          setNicknameError('');
+        } finally {
+          setCheckingUsername(false);
+        }
+      }, 600);
+    } else {
+      setNicknameError('');
     }
-
-    setNicknameError('');
+    
     return true;
-  };
+  }, [isLogin, checkUsernameAvailability]);
 
   const validatePassword = () => {
+    if (!password) {
+      setPasswordError('Password cannot be empty');
+      return false;
+    }
+
     if (password.length < 8) {
       setPasswordError('Password must be at least 8 characters');
       return false;
     }
 
-    if (password !== confirmPassword) {
+    if (!isLogin && password !== confirmPassword) {
       setPasswordError('Passwords do not match');
       return false;
     }
@@ -77,22 +136,72 @@ export default function NicknameScreen() {
   };
 
   const handleContinue = async () => {
-    if (!validateNickname(nickname) || !validatePassword()) {
+    // Clear any previous errors
+    setNicknameError('');
+    setPasswordError('');
+    
+    // Validate password
+    const isPasswordValid = validatePassword();
+    if (!isPasswordValid) {
       return;
     }
-
-    setLoading(true);
-
+    
+    // We need to check username availability regardless of debounced result
     try {
-      // Save the nickname and password to AsyncStorage
-      await AsyncStorage.setItem('@user:nickname', nickname);
-      await AsyncStorage.setItem('@user:password', password); // In a real app, would never store plain text password
+      setLoading(true);
       
-      // Continue to the next screen
+      // Double-check username availability synchronously before proceeding
+      const trimmedUsername = nickname.trim();
+      
+      // Basic validation checks
+      if (!trimmedUsername) {
+        setNicknameError('Username cannot be empty');
+        setLoading(false);
+        return;
+      }
+      
+      if (trimmedUsername.length < 3) {
+        setNicknameError('Username must be at least 3 characters');
+        setLoading(false);
+        return;
+      }
+      
+      if (trimmedUsername.length > 20) {
+        setNicknameError('Username must be less than 20 characters');
+        setLoading(false);
+        return;
+      }
+      
+      // Check for invalid characters
+      const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+      if (!usernameRegex.test(trimmedUsername)) {
+        setNicknameError('Username can only contain letters, numbers, underscores, and hyphens');
+        setLoading(false);
+        return;
+      }
+      
+      // Critical check: Make sure username isn't already taken before registration
+      const exists = await checkUsernameAvailability(trimmedUsername);
+      if (exists) {
+        setNicknameError('Username already taken. Please choose another.');
+        setLoading(false);
+        return;
+      }
+      
+      // If we get here, username is valid and available
+      // Register using the AuthContext
+      const avatarId = '1';
+      await register(trimmedUsername, password, avatarId);
+      
+      // Continue to avatar selection
       router.push('/onboarding/avatar');
-    } catch (error) {
-      console.error('Error saving user data:', error);
-      Alert.alert('Error', 'Failed to save your information. Please try again.');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      Alert.alert(
+        'Registration Failed',
+        error.message || 'Please try again',
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
     }
@@ -100,7 +209,9 @@ export default function NicknameScreen() {
 
   const isFormValid = nickname.trim().length >= 3 && 
                       password.length >= 8 && 
-                      password === confirmPassword;
+                      (!isLogin ? password === confirmPassword : true) &&
+                      !checkingUsername && 
+                      !nicknameError;
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -122,6 +233,7 @@ export default function NicknameScreen() {
               <View style={styles.progressDot} />
               <View style={styles.progressDot} />
               <View style={styles.progressDot} />
+              <View style={styles.progressDot} />
             </View>
           </View>
 
@@ -139,22 +251,26 @@ export default function NicknameScreen() {
               Create your activist profile
             </Text>
             <Text style={styles.subtitle}>
-              Choose a nickname and secure password to join the movement
+              Choose a username and secure password to join the movement
             </Text>
 
             <RoundedInput
-              label="Nickname"
-              placeholder="Enter a nickname"
+              label="Username"
+              placeholder="Enter a username"
               value={nickname}
               onChangeText={(text) => {
                 setNickname(text);
-                validateNickname(text);
+                validateUsernameDebounced(text);
               }}
               maxLength={20}
               error={nicknameError}
               autoCapitalize="none"
               returnKeyType="next"
-              leftIcon={<Ionicons name="person" size={20} color={Colors.dark.textSecondary} />}
+              leftIcon={<Ionicons name="person" size={20} color={Colors.dark.secondary} />}
+              rightIcon={checkingUsername ? 
+                <View style={{padding: 5}}>
+                  <Ionicons name="sync" size={20} color={Colors.dark.secondary} /> 
+                </View> : undefined}
             />
 
             <RoundedInput
@@ -165,13 +281,13 @@ export default function NicknameScreen() {
               secureTextEntry={!showPassword}
               error={passwordError}
               returnKeyType="next"
-              leftIcon={<Ionicons name="lock-closed" size={20} color={Colors.dark.textSecondary} />}
+              leftIcon={<Ionicons name="lock-closed" size={20} color={Colors.dark.secondary} />}
               rightIcon={
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Ionicons
                     name={showPassword ? "eye-off" : "eye"}
                     size={20}
-                    color={Colors.dark.textSecondary}
+                    color={Colors.dark.secondary}
                   />
                 </TouchableOpacity>
               }
@@ -185,13 +301,13 @@ export default function NicknameScreen() {
               secureTextEntry={!showPassword}
               error={passwordError ? "" : confirmPassword && password !== confirmPassword ? "Passwords do not match" : ""}
               returnKeyType="done"
-              leftIcon={<Ionicons name="lock-closed" size={20} color={Colors.dark.textSecondary} />}
+              leftIcon={<Ionicons name="lock-closed" size={20} color={Colors.dark.secondary} />}
             />
 
             <RoundedCard style={styles.tipContainer}>
-              <Ionicons name="information-circle" size={22} color={Colors.dark.blue} />
+              <Ionicons name="information-circle" size={22} color={Colors.dark.accent} />
               <Text style={styles.tipText}>
-                Choose a memorable nickname and strong password. Your nickname will be visible to other activists.
+                Choose a memorable username and strong password. Your username will be visible to other activists.
               </Text>
             </RoundedCard>
           </ScrollView>
@@ -251,59 +367,65 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.dark.navyPurple,
-    marginHorizontal: 4,
+    backgroundColor: Colors.dark.secondary,
+    marginHorizontal: 6,
+    opacity: 0.3,
   },
   activeDot: {
-    backgroundColor: Colors.dark.yellowGold,
-    width: 20,
+    opacity: 1,
   },
   mascotContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginVertical: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 10,
     color: Colors.dark.text,
+    marginBottom: 10,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.dark.textSecondary,
-    marginBottom: 24,
+    color: Colors.dark.secondary,
+    marginBottom: 30,
     textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.dark.secondary,
+    marginBottom: 8,
   },
   tipContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    marginTop: 16,
-    backgroundColor: Colors.dark.navyPurple,
+    alignItems: 'flex-start',
+    marginTop: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.dark.secondary,
+    opacity: 0.8,
   },
   tipText: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 10,
     fontSize: 14,
-    color: Colors.dark.textSecondary,
+    color: Colors.dark.text,
   },
   footer: {
     width: '100%',
-    padding: 16,
-    backgroundColor: Colors.dark.background,
     position: 'absolute',
     bottom: 0,
-    left: 0,
-    right: 0,
+    paddingTop: 16,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    backgroundColor: Colors.dark.background,
   },
   buttonContainer: {
-    width: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
   },
   continueButton: {
-    width: '90%',
-    backgroundColor: Colors.dark.yellowGold,
+    width: '100%',
   },
 }); 

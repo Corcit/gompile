@@ -75,42 +75,42 @@ export default function LoginScreen() {
     
     // Basic validation
     if (!value.trim()) {
-      setUsernameError('Username cannot be empty');
+      setUsernameError('Kullanıcı adı boş olamaz');
       return false;
     }
     
     if (value.length < 3) {
-      setUsernameError('Username must be at least 3 characters');
+      setUsernameError('Kullanıcı adı en az 3 karakter olmalı');
       return false;
     }
 
     if (value.length > 20) {
-      setUsernameError('Username must be less than 20 characters');
+      setUsernameError('Kullanıcı adı en fazla 20 karakter olmalı');
       return false;
     }
     
     // Check for invalid characters
     const usernameRegex = /^[a-zA-Z0-9_-]+$/;
     if (!usernameRegex.test(value)) {
-      setUsernameError('Username can only contain letters, numbers, underscores, and hyphens');
+      setUsernameError('Kullanıcı adı yalnızca harf, sayı, alt çizgi ve tire içermelidir');
       return false;
     }
     
     // If not in login mode, check if username exists after a delay
     if (!isLogin) {
-      setUsernameError('Checking username availability...');
+      setUsernameError('Kullanıcı adının mevcut olup olmadığını kontrol ediliyor...');
       setCheckingUsername(true);
       
       usernameTimeout.current = setTimeout(async () => {
         try {
           const exists = await checkUsernameAvailability(value);
           if (exists) {
-            setUsernameError('Username already taken. Please choose another.');
+            setUsernameError('Bu kullanıcı adı zaten kullanılıyor. Lütfen başka bir tane seçin');
           } else {
             setUsernameError('');
           }
         } catch (error) {
-          console.error('Error checking username:', error);
+          console.error('Kullanıcı adı kontrolünde hata:', error);
           setUsernameError('');
         } finally {
           setCheckingUsername(false);
@@ -128,26 +128,26 @@ export default function LoginScreen() {
     setUsernameError('');
     
     if (!value || value.trim() === '') {
-      setUsernameError('Username cannot be empty');
+      setUsernameError('Kullanıcı adı boş olamaz');
       return false;
     }
     
     const trimmedValue = value.trim();
     
     if (trimmedValue.length < 3) {
-      setUsernameError('Username must be at least 3 characters');
+      setUsernameError('Kullanıcı adı en az 3 karakter olmalı');
       return false;
     }
 
     if (trimmedValue.length > 20) {
-      setUsernameError('Username must be less than 20 characters');
+      setUsernameError('Kullanıcı adı en fazla 20 karakter olmalı');
       return false;
     }
     
     // Check for invalid characters
     const usernameRegex = /^[a-zA-Z0-9_-]+$/;
     if (!usernameRegex.test(trimmedValue)) {
-      setUsernameError('Username can only contain letters, numbers, underscores, and hyphens');
+      setUsernameError('Kullanıcı adı yalnızca harf, sayı, alt çizgi ve tire içermelidir');
       return false;
     }
     
@@ -157,17 +157,17 @@ export default function LoginScreen() {
   
   const validatePassword = () => {
     if (!password) {
-      setPasswordError('Password cannot be empty');
+      setPasswordError('Şifre boş olamaz');
       return false;
     }
     
     if (password.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+      setPasswordError('Şifre en az 8 karakter olmalı');
       return false;
     }
     
     if (!isLogin && password !== confirmPassword) {
-      setPasswordError('Passwords do not match');
+      setPasswordError('Şifreler eşleşmiyor');
       return false;
     }
     
@@ -194,12 +194,12 @@ export default function LoginScreen() {
       try {
         const exists = await checkUsernameAvailability(username);
         if (exists) {
-          setUsernameError('Username already taken. Please choose another.');
+          setUsernameError('Bu kullanıcı adı zaten kullanılıyor. Lütfen başka bir tane seçin');
           setFormLoading(false);
           return;
         }
       } catch (error) {
-        console.error('Error checking username:', error);
+        console.error('Kullanıcı adı kontrolünde hata:', error);
       }
     }
     
@@ -220,8 +220,8 @@ export default function LoginScreen() {
       }
     } catch (error: any) {
       Alert.alert(
-        isLogin ? 'Login Failed' : 'Registration Failed',
-        error.message || 'Please try again',
+        isLogin ? 'Giriş Yapılamadı' : 'Kayıt Olunamadı',
+        error.message || 'Lütfen tekrar deneyin',
         [{ text: 'OK' }]
       );
     } finally {
@@ -239,7 +239,7 @@ export default function LoginScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.dark.primary} />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>Yükleniyor...</Text>
       </View>
     );
   }
@@ -257,11 +257,12 @@ export default function LoginScreen() {
               <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
             </TouchableOpacity>
             
-            <Text style={styles.appName}>Boykot App</Text>
+            <Text style={styles.appName}>Gompile</Text>
             
             <View style={styles.stepIndicatorContainer}>
               <View style={styles.stepDot} />
               <View style={[styles.stepDot, styles.activeDot]} />
+              <View style={styles.stepDot} />
               <View style={styles.stepDot} />
               <View style={styles.stepDot} />
             </View>
@@ -275,14 +276,14 @@ export default function LoginScreen() {
           >
             <View style={styles.headerContainer}>
               <Text style={styles.subtitle}>
-                {isLogin ? 'Login to your account' : 'Create a new account'}
+                {isLogin ? 'Hesabınıza giriş yapın' : 'Yeni hesap oluşturun'}
               </Text>
             </View>
             
             <RoundedCard style={styles.formContainer}>
               <RoundedInput
-                label="Username"
-                placeholder="Enter your username"
+                label="Kullanıcı Adı"
+                placeholder="Kullanıcı adınızı girin"
                 value={username}
                 onChangeText={(text) => {
                   setUsername(text);
@@ -293,7 +294,7 @@ export default function LoginScreen() {
                   
                   // Basic validation for very short usernames
                   if (text.length > 0 && text.length < 3) {
-                    setUsernameError('Username must be at least 3 characters');
+                    setUsernameError('Kullanıcı adı en az 3 karakter olmalı');
                     return;
                   } else if (text.length === 0) {
                     setUsernameError('');
@@ -303,7 +304,7 @@ export default function LoginScreen() {
                   // For registration, use debounced check to verify availability
                   if (!isLogin && text.length >= 3) {
                     setCheckingUsername(true);
-                    setUsernameError('Checking username availability...');
+                    setUsernameError('Kullanıcı adının mevcut olup olmadığını kontrol ediliyor...');
                     
                     usernameTimeout.current = setTimeout(async () => {
                       try {
@@ -316,12 +317,12 @@ export default function LoginScreen() {
                         // Then check availability
                         const exists = await checkUsernameAvailability(text);
                         if (exists) {
-                          setUsernameError('Username already taken. Please choose another.');
+                          setUsernameError('Bu kullanıcı adı zaten kullanılıyor. Lütfen başka bir tane seçin');
                         } else {
                           setUsernameError('');
                         }
                       } catch (error) {
-                        console.error('Error checking username:', error);
+                        console.error('Kullanıcı adı kontrolünde hata:', error);
                         setUsernameError('');
                       } finally {
                         setCheckingUsername(false);
@@ -340,11 +341,11 @@ export default function LoginScreen() {
                         setCheckingUsername(true);
                         checkUsernameAvailability(username).then(exists => {
                           if (exists) {
-                            setUsernameError('Username already taken. Please choose another.');
+                            setUsernameError('Bu kullanıcı adı zaten kullanılıyor. Lütfen başka bir tane seçin');
                           }
                           setCheckingUsername(false);
                         }).catch(error => {
-                          console.error('Error checking username on blur:', error);
+                          console.error('Kullanıcı adı kontrolünde hata:', error);
                           setCheckingUsername(false);
                         });
                       }
@@ -365,8 +366,8 @@ export default function LoginScreen() {
               />
               
               <RoundedInput
-                label="Password"
-                placeholder={isLogin ? "Enter your password" : "Create a password"}
+                label="Şifre"
+                placeholder={isLogin ? "Şifrenizi girin" : "Bir şifre oluşturun"}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -386,8 +387,8 @@ export default function LoginScreen() {
               
               {!isLogin && (
                 <RoundedInput
-                  label="Confirm Password"
-                  placeholder="Confirm your password"
+                  label="Şifre Onayı"
+                  placeholder="Şifrenizi onaylayın"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showPassword}
@@ -399,12 +400,12 @@ export default function LoginScreen() {
               <View style={styles.privacyNote}>
                 <Ionicons name="shield-checkmark" size={18} color={Colors.dark.tint} />
                 <Text style={styles.privacyNoteText}>
-                  We don't collect any personal information
+                  Hiçbir kişisel bilginizi toplamıyoruz
                 </Text>
               </View>
               
               <RoundedButton
-                title={isLogin ? "Login" : "Register"}
+                title={isLogin ? "Giriş Yap" : "Kayıt Ol"}
                 onPress={handleSubmit}
                 style={styles.submitButton}
                 loading={formLoading || checkingUsername}
@@ -420,7 +421,7 @@ export default function LoginScreen() {
                 }}
               >
                 <Text style={styles.switchModeText}>
-                  {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
+                  {isLogin ? "Hesabınız yok mu? Kayıt olun" : "Zaten hesabınız var mı? Giriş yapın"}
                 </Text>
               </TouchableOpacity>
             </RoundedCard>

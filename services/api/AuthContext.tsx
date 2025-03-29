@@ -130,29 +130,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } else {
       try {
-        // Create a temporary anonymous auth instance just for checking
-        // This won't trigger the auth state change listener
-        const tempAuth = auth;
-        let tempUser = tempAuth.currentUser;
-        let shouldSignOut = false;
-        
-        if (!tempUser) {
-          const result = await signInAnonymously(tempAuth);
-          tempUser = result.user;
-          shouldSignOut = true; // Flag that we need to sign out this temporary user
+        // Ensure we have authentication
+        if (!auth.currentUser) {
+          try {
+            console.log("Signing in anonymously to check username");
+            await signInAnonymously(auth);
+          } catch (authError) {
+            console.error("Failed to sign in anonymously for username check:", authError);
+            // Continue anyway, the query might still work
+          }
         }
         
-        // Now query with authenticated user
-        const q = query(collection(firestore, 'userProfiles'), where('nickname', '==', username));
-        const querySnapshot = await getDocs(q);
-        const exists = !querySnapshot.empty;
+        // First check userProfiles collection for nickname
+        console.log("Checking if username exists in userProfiles:", username);
+        const profilesQuery = query(collection(firestore, 'userProfiles'), where('nickname', '==', username));
+        const profilesSnapshot = await getDocs(profilesQuery);
         
-        // If we signed in temporarily, sign out to avoid affecting auth state
-        if (shouldSignOut && tempUser) {
-          // We don't want to await this to avoid triggering auth state change
-          signOut(tempAuth).catch(error => console.error('Error signing out temp user:', error));
-        }
+        // Also check userCredentials collection for username
+        console.log("Checking if username exists in userCredentials:", username);
+        const credentialsQuery = query(collection(firestore, 'userCredentials'), where('username', '==', username));
+        const credentialsSnapshot = await getDocs(credentialsQuery);
         
+        // If username exists in either collection, return true
+        const exists = !profilesSnapshot.empty || !credentialsSnapshot.empty;
+        console.log(`Username ${username} exists: ${exists}`);
         return exists;
       } catch (error) {
         console.error('Error checking username:', error);
@@ -345,7 +346,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       
-      // Check if username already exists
+      // Double-check if username already exists - critical for preventing duplicates
+      console.log("Final check if username exists:", username);
       const usernameExists = await checkUsernameExists(username);
       if (usernameExists) {
         throw new Error('Username already taken. Please choose another username.');

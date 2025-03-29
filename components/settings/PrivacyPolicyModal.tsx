@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   useColorScheme,
+  Dimensions,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
@@ -19,6 +20,7 @@ interface PrivacyPolicyModalProps {
 export default function PrivacyPolicyModal({ visible, onClose }: PrivacyPolicyModalProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { height } = Dimensions.get('window');
 
   return (
     <Modal
@@ -28,19 +30,23 @@ export default function PrivacyPolicyModal({ visible, onClose }: PrivacyPolicyMo
       onRequestClose={onClose}
     >
       <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, { maxHeight: height * 0.85 }]}>
           <View style={styles.header}>
             <Text style={styles.title}>Gizlilik Politikası</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <MaterialIcons
                 name="close"
                 size={24}
-                color={Colors.dark.text}
+                color="#FFFFFF"
               />
             </TouchableOpacity>
           </View>
           
-          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.scrollView} 
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={styles.scrollContent}
+          >
             <Text style={styles.importantNote}>
               Önemli Not: Uygulamamız herhangi bir email, telefon numarası, konum veya kişisel veri toplamamaktadır.
             </Text>
@@ -120,13 +126,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    padding: 0,
   },
   modalContent: {
-    width: '90%',
-    maxHeight: '90%',
-    backgroundColor: Colors.dark.background,
-    borderRadius: 20,
+    width: '94%',
+    backgroundColor: '#1E1E1E',
+    borderRadius: 16,
     padding: 20,
     elevation: 5,
     shadowColor: '#000',
@@ -141,42 +147,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 10,
+    marginBottom: 16,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.border,
+    borderBottomColor: '#333',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.dark.text,
+    color: '#FFFFFF',
   },
   closeButton: {
-    padding: 5,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 30,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.dark.text,
-    marginTop: 20,
-    marginBottom: 10,
+    color: '#FFFFFF',
+    marginTop: 24,
+    marginBottom: 12,
   },
   paragraph: {
     fontSize: 16,
     lineHeight: 24,
-    color: Colors.dark.text,
-    marginBottom: 15,
+    color: '#DDDDDD',
+    marginBottom: 16,
   },
   importantNote: {
     fontSize: 16,
     lineHeight: 24,
-    color: Colors.dark.text,
-    marginBottom: 20,
+    color: '#FFFFFF',
+    marginTop: 8,
+    marginBottom: 24,
     fontWeight: '600',
-    backgroundColor: Colors.dark.card,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
     padding: 16,
     borderRadius: 8,
     borderLeftWidth: 4,
@@ -184,9 +196,9 @@ const styles = StyleSheet.create({
   },
   lastUpdate: {
     fontSize: 14,
-    color: Colors.dark.text + '80',
+    color: '#AAAAAA',
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 30,
     marginBottom: 10,
   },
 }); 

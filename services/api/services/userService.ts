@@ -43,7 +43,9 @@ export default class UserService {
    * @returns User settings
    */
   async getUserSettings(): Promise<UserSettings> {
-    return this.apiClient.get('/users/settings');
+    // Try to get settings from API
+    const settings = await this.apiClient.get('/users/settings');
+    return settings;
   }
 
   /**
@@ -114,21 +116,6 @@ export default class UserService {
   }
 
   /**
-   * Gets the user's leaderboard rank
-   * @param timeframe Optional timeframe (weekly, monthly, allTime)
-   * @returns Ranking information
-   */
-  async getLeaderboardRank(timeframe: 'weekly' | 'monthly' | 'allTime' = 'weekly'): Promise<{
-    rank: number;
-    score: number;
-    totalParticipants: number;
-  }> {
-    return this.apiClient.get('/users/leaderboard/rank', {
-      params: { timeframe }
-    });
-  }
-
-  /**
    * Gets the leaderboard
    * @param timeframe Timeframe (weekly, monthly, allTime)
    * @param limit Number of entries to return
@@ -152,6 +139,21 @@ export default class UserService {
   }> {
     return this.apiClient.get('/users/leaderboard', {
       params: { timeframe, limit, offset }
+    });
+  }
+
+  /**
+   * Gets the user's leaderboard rank
+   * @param timeframe Optional timeframe (weekly, monthly, allTime)
+   * @returns Ranking information
+   */
+  async getLeaderboardRank(timeframe: 'weekly' | 'monthly' | 'allTime' = 'weekly'): Promise<{
+    rank: number;
+    score: number;
+    totalParticipants: number;
+  }> {
+    return this.apiClient.get('/users/leaderboard/rank', {
+      params: { timeframe }
     });
   }
 

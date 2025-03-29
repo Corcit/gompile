@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Stack, SplashScreen } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 import { View, Text, StyleSheet } from 'react-native';
 import { useColorScheme } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { ApiProvider } from '../services/api/ApiContext';
+import { AuthProvider } from '../services/api/AuthContext';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -19,10 +21,7 @@ export default function RootLayout() {
     // Prepare resources
     async function prepare() {
       try {
-        // Check if onboarding is completed
-        const onboardingCompleted = await AsyncStorage.getItem('@onboarding:completed');
-        
-        // Any other preparation tasks like loading fonts, etc.
+        // Any preparation tasks like loading fonts, etc.
         
       } catch (e) {
         console.warn('Error preparing app:', e);
@@ -45,37 +44,39 @@ export default function RootLayout() {
   }
 
   return (
-    <ApiProvider>
-      <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.dark.background },
-          animation: 'slide_from_right',
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="onboarding/index" options={{ gestureEnabled: false }} />
-        <Stack.Screen name="onboarding/welcome" />
-        <Stack.Screen name="onboarding/nickname" />
-        <Stack.Screen name="onboarding/avatar" />
-        <Stack.Screen name="onboarding/experience" />
-        <Stack.Screen name="onboarding/notifications" />
-        <Stack.Screen name="onboarding/final-registration" />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
-      </Stack>
-    </ApiProvider>
+    <AuthProvider>
+      <ApiProvider>
+        <StatusBar style="auto" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.dark.background },
+            animation: 'slide_from_right',
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="login" options={{ gestureEnabled: false }} />
+          <Stack.Screen 
+            name="onboarding" 
+            options={{ 
+              headerShown: false,
+              gestureEnabled: false 
+            }} 
+          />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
+        </Stack>
+      </ApiProvider>
+    </AuthProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
   },
 });
