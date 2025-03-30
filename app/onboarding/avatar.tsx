@@ -136,17 +136,11 @@ export default function AvatarSelectionScreen() {
         onPress={() => setSelectedAvatar(item.id)}
         activeOpacity={0.7}
       >
-        {item.imageUrl ? (
-          <Image
-            source={{ uri: item.imageUrl }}
-            style={styles.avatarImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <Text style={styles.fallbackText}>
-            {item.name.substring(0, 2).toUpperCase()}
-          </Text>
-        )}
+        <Image
+          source={require('../../assets/images/avatar-test.png')}
+          style={styles.avatarImage}
+          resizeMode="cover"
+        />
         
         {isSelected && (
           <View style={styles.checkmarkContainer}>
