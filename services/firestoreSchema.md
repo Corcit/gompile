@@ -41,35 +41,6 @@ This document outlines the database schema for the Gompile app.
   }
   ```
 
-### protestEvents
-- Document ID: `{eventId}`
-  ```
-  {
-    id: string,
-    title: string,
-    description: string,
-    date: timestamp,
-    startTime: string,
-    endTime: string,
-    location: {
-      name: string,
-      address: string,
-      latitude: number,
-      longitude: number
-    },
-    organizer: {
-      name: string,
-      channelId: string
-    },
-    category: string,
-    tags: array,
-    attendeeCount: number,
-    registrationRequired: boolean,
-    status: string,  // 'upcoming', 'ongoing', 'completed', 'cancelled'
-    imageUrl: string
-  }
-  ```
-
 ### boycottCompanies
 - Document ID: `{companyId}`
   ```
@@ -141,7 +112,6 @@ This document outlines the database schema for the Gompile app.
 
 - attendanceRecords: userId (for querying user attendance history)
 - attendanceRecords: userId + timestamp (for sorting user attendance by date)
-- protestEvents: status + date (for querying upcoming events)
 - announcements: publishDate (for sorting by date)
 - boycottCompanies: category (for filtering by category)
 

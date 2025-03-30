@@ -177,38 +177,6 @@ async function initializeCollections() {
     }
   ];
   
-  // 6. Protest Events
-  const protestEvents = [
-    {
-      id: 'event-1',
-      title: 'Rally Against Corporate Pollution',
-      description: 'Join us for a peaceful protest against corporate pollution practices.',
-      date: admin.firestore.Timestamp.fromDate(new Date('2023-06-15')),
-      location: {
-        address: 'City Hall Square, Main City',
-        latitude: 40.7128,
-        longitude: -74.0060
-      },
-      organizer: 'Environmental Action Group',
-      attendeeCount: 52,
-      status: 'upcoming'
-    },
-    {
-      id: 'event-2',
-      title: 'Workers Rights March',
-      description: 'A march to support better working conditions for factory workers.',
-      date: admin.firestore.Timestamp.fromDate(new Date('2023-07-10')),
-      location: {
-        address: 'Downtown Labor Square, East City',
-        latitude: 34.0522,
-        longitude: -118.2437
-      },
-      organizer: 'Workers United',
-      attendeeCount: 38,
-      status: 'upcoming'
-    }
-  ];
-  
   // 7. Attendance Records
   const attendanceRecords = [
     {
@@ -273,7 +241,6 @@ async function initializeCollections() {
   await createCollectionWithSamples('announcements', announcements);
   await createCollectionWithSamples('channels', channels);
   await createCollectionWithSamples('channelSubscriptions', channelSubscriptions);
-  await createCollectionWithSamples('protestEvents', protestEvents);
   await createCollectionWithSamples('attendanceRecords', attendanceRecords);
   await createCollectionWithSamples('users', users);
   

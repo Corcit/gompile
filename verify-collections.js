@@ -28,7 +28,6 @@ const requiredCollections = [
   'announcements',
   'channels',
   'channelSubscriptions',
-  'protestEvents',
   'attendanceRecords',
   'users'
 ];

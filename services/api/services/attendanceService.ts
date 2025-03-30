@@ -1,4 +1,4 @@
-import { AttendanceRecord, ProtestEvent, VerificationMethod, VerificationRequest, AttendanceStats } from '../models/Attendance';
+import { AttendanceRecord, VerificationMethod, VerificationRequest, AttendanceStats } from '../models/Attendance';
 import ApiClient from '../apiClient';
 
 /**
@@ -103,80 +103,5 @@ export default class AttendanceService {
    */
   async shareAttendance(recordId: string, platform: string): Promise<{success: boolean; url?: string}> {
     return this.apiClient.post('/attendance/share', { recordId, platform });
-  }
-  
-  /**
-   * Gets upcoming events/protests
-   * @param limit Number of events to return
-   * @param offset Offset for pagination
-   * @returns List of upcoming events
-   */
-  async getUpcomingEvents(limit = 10, offset = 0): Promise<{events: ProtestEvent[]; total: number}> {
-    return this.apiClient.get('/events/upcoming', { params: { limit, offset } });
-  }
-  
-  /**
-   * Gets events near a location
-   * @param latitude Latitude
-   * @param longitude Longitude
-   * @param radius Radius in kilometers
-   * @param limit Number of events to return
-   * @returns List of nearby events
-   */
-  async getNearbyEvents(latitude: number, longitude: number, radius = 10, limit = 10): Promise<ProtestEvent[]> {
-    return this.apiClient.get('/events/nearby', { params: { latitude, longitude, radius, limit } });
-  }
-  
-  /**
-   * Gets details for a specific event
-   * @param eventId Event ID
-   * @returns Event details
-   */
-  async getEventDetails(eventId: string): Promise<ProtestEvent> {
-    return this.apiClient.get(`/events/${eventId}`);
-  }
-  
-  /**
-   * Registers user for an event
-   * @param eventId Event ID
-   * @returns Registration status
-   */
-  async registerForEvent(eventId: string): Promise<{success: boolean; registrationId?: string}> {
-    return this.apiClient.post(`/events/${eventId}/register`, {});
-  }
-  
-  /**
-   * Cancels registration for an event
-   * @param eventId Event ID
-   * @returns Cancellation status
-   */
-  async cancelRegistration(eventId: string): Promise<{success: boolean}> {
-    return this.apiClient.post(`/events/${eventId}/cancel`, {});
-  }
-  
-  /**
-   * Searches for events
-   * @param query Search query
-   * @param filters Additional filters
-   * @returns Search results
-   */
-  async searchEvents(query: string, filters?: {
-    startDate?: Date;
-    endDate?: Date;
-    categories?: string[];
-    location?: {
-      latitude: number;
-      longitude: number;
-      radius: number;
-    };
-    limit?: number;
-    offset?: number;
-  }): Promise<{events: ProtestEvent[]; total: number}> {
-    return this.apiClient.get('/events/search', { 
-      params: { 
-        query,
-        ...filters
-      }
-    });
   }
 } 

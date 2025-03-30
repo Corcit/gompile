@@ -17,54 +17,6 @@ export interface AttendanceRecord {
 }
 
 /**
- * Protest Event model
- * Represents a protest event that users can attend
- */
-export interface ProtestEvent {
-  id: string;                // Unique identifier for the protest
-  title: string;             // Title of the protest
-  description: string;       // Description of the protest
-  date: Date;                // Date of the protest
-  startTime?: string;        // Start time (HH:MM)
-  endTime?: string;          // End time (HH:MM)
-  location: {
-    name: string;            // Name of the location
-    address?: string;        // Address
-    latitude?: number;       // Latitude for mapping
-    longitude?: number;      // Longitude for mapping
-  };
-  organizer: {
-    name: string;            // Name of the organizer
-    channelId?: string;      // ID of the announcement channel
-  };
-  category: string;          // Category of the protest
-  tags: string[];            // Tags related to the protest
-  attendees: number;         // Count of attendees
-  isRegistered?: boolean;    // Whether the current user is registered
-  verified?: boolean;        // Whether the current user's attendance is verified
-  registrationRequired: boolean; // Whether registration is required
-  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled'; // Status of the protest
-  imageUrl?: string;         // URL to an image representing the protest
-}
-
-/**
- * ProtestRegistration model
- * Represents a user's registration for a protest
- */
-export interface ProtestRegistration {
-  id: string;                // Unique identifier for the registration
-  userId: string;            // ID of the user registering
-  protestId: string;         // ID of the protest event
-  registrationDate: Date;    // Date of registration
-  status: 'registered' | 'attended' | 'cancelled' | 'no-show'; // Status of registration
-  notificationsSent: {       // Track notifications sent to the user
-    reminder24h: boolean;    // 24 hour reminder sent
-    reminder2h: boolean;     // 2 hour reminder sent
-    locationPrompt: boolean; // Location verification prompt sent
-  };
-}
-
-/**
  * Attendance Verification options
  * Represents options for verifying attendance
  */
