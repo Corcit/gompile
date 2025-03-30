@@ -57,9 +57,8 @@ The script creates the following collections with sample documents:
 3. `announcements` - System and channel announcements
 4. `channels` - Communication channels
 5. `channelSubscriptions` - User subscriptions to channels
-6. `protestEvents` - Protest event details
-7. `attendanceRecords` - User attendance records
-8. `users` - User profiles and settings
+6. `attendanceRecords` - User attendance records
+7. `users` - User profiles and settings
 
 ## Verification
 

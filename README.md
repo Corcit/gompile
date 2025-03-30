@@ -214,7 +214,6 @@ The app uses the following collections in Firestore:
 | `announcements` | System and channel announcements |
 | `channels` | Communication channels |
 | `channelSubscriptions` | User subscriptions to channels |
-| `protestEvents` | Protest event details |
 | `attendanceRecords` | User attendance records |
 | `users` | User profiles and settings |
 
