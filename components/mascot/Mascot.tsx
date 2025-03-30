@@ -36,9 +36,8 @@ const Mascot: React.FC<MascotProps> = ({
 
   // Get the appropriate image based on expression
   const getMascotImage = () => {
-    // In a real implementation, we would have different mascot images for each expression
-    // For now, we'll just return a placeholder
-    return require('../../assets/mascot/default.png');
+    // Use the new image file with a cache-busting timestamp
+    return require('../../assets/mascot/default-new.png');
   };
 
   // Get the appropriate size based on the size prop
