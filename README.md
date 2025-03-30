@@ -397,6 +397,17 @@ The Firebase project configuration is stored in:
 - `ios/Gompile/GoogleService-Info.plist` - iOS Firebase configuration
 - `android/app/google-services.json` - Android Firebase configuration (if applicable)
 
+## Website Integration
+
+The Gompile website (gompile.com) uses Firebase collections as a CMS to display data to website visitors:
+
+- The `boycottCompanies` collection provides data about companies to boycott
+- The `announcements` collection delivers news and updates
+
+Firestore security rules are configured to allow public read access to these collections, enabling seamless sharing of content between the mobile app and website. This integration allows for centralized content management while maintaining a consistent experience across platforms.
+
+The website integration leverages Firebase SDK for Web to query and display collection data in real-time, ensuring website visitors always see the most up-to-date information.
+
 ## Authentication Flow
 
 The app uses a two-tier authentication system:
