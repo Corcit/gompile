@@ -211,9 +211,9 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Profil</Text>
           <View style={styles.profileInfo}>
             <Image
-              source={settings?.avatar?.url ? { uri: settings.avatar.url } : require('../../assets/images/avatar1.png')}
+              source={settings?.avatar?.url ? { uri: settings.avatar.url } : require('../../assets/images/avatar-test.png')}
               style={styles.avatar}
-              defaultSource={require('../../assets/images/avatar1.png')}
+              defaultSource={require('../../assets/images/avatar-test.png')}
             />
             <View style={styles.profileText}>
               <Text style={[styles.nickname, isDark && styles.darkText]}>

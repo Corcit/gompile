@@ -403,7 +403,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             avatarId: avatarId,
             experienceLevel: 1,
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            avatar: {
+              id: avatarId,
+              url: require('../../assets/images/avatar-test.png') // Using our local test avatar
+            }
           });
           
           // Create user settings
@@ -414,7 +418,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             nickname: username,
             avatar: {
               id: avatarId,
-              url: `https://via.placeholder.com/150` // In a real app, you'd use actual avatar URLs
+              url: require('../../assets/images/avatar-test.png') // Using our local test avatar
             },
             createdAt: new Date(),
             updatedAt: new Date()
@@ -564,7 +568,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await setDoc(userProfileRef, {
             ...profileSnapshot.data(),
             ...data,
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            avatar: {
+              id: data.avatarId,
+              url: require('../../assets/images/avatar-test.png') // Using our local test avatar
+            }
           }, { merge: true });
         }
         
@@ -577,7 +585,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...(data.avatarId && { 
               avatar: {
                 id: data.avatarId,
-                url: `https://via.placeholder.com/150` // In a real app, you'd use actual avatar URLs
+                url: require('../../assets/images/avatar-test.png') // Using our local test avatar
               }
             }),
             updatedAt: new Date()

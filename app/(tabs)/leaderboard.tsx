@@ -288,22 +288,8 @@ export default function LeaderboardScreen() {
 
   // Get avatar image based on avatarId
   const getAvatarImage = useCallback((avatarId: string) => {
-    // This is a temporary solution until we have proper avatar images from the backend
-    const avatarMapping: {[key: string]: any} = {
-      '1': require('../../assets/images/avatar1.png'),
-      '2': require('../../assets/images/avatar2.png'),
-      '3': require('../../assets/images/avatar3.png'),
-      '4': require('../../assets/images/avatar4.png'),
-      '5': require('../../assets/images/avatar5.png'),
-      '6': require('../../assets/images/avatar6.png'),
-      '7': require('../../assets/images/avatar7.png'),
-      '8': require('../../assets/images/avatar8.png'),
-      '9': require('../../assets/images/avatar9.png'),
-      '10': require('../../assets/images/avatar10.png'),
-      'user': require('../../assets/images/avatar_user.png'),
-    };
-    
-    return avatarMapping[avatarId] || require('../../assets/images/avatar_user.png');
+    // Always return our test avatar image
+    return require('../../assets/images/avatar-test.png');
   }, []);
 
   // Filter the data based on search query
