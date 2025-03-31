@@ -4,7 +4,6 @@ import AttendanceService from './services/attendanceService';
 import AnnouncementService from './services/announcementService';
 import BoycottService from './services/boycottService';
 import apiClient from './apiClient';
-import { useAuth } from './AuthContext';
 
 interface ApiContextValue {
   userService: UserService;
@@ -24,9 +23,6 @@ export function useApi() {
 }
 
 export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Get authentication state from AuthContext
-  const { isAuthenticated } = useAuth();
-  
   // Initialize service instances with the API client
   const userService = new UserService(apiClient);
   const attendanceService = new AttendanceService(apiClient);

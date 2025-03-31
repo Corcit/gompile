@@ -44,8 +44,8 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <ApiProvider>
+    <ApiProvider>
+      <AuthProvider>
         <StatusBar style="auto" />
         <Stack
           screenOptions={{
@@ -65,8 +65,8 @@ export default function RootLayout() {
           />
           <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
         </Stack>
-      </ApiProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ApiProvider>
   );
 }
 
