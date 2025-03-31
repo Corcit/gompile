@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
 import { auth, firestore } from '../firebase';
+import { useUserService } from './hooks/useUserService';
 
 // Set to false to use real Firebase Auth
 const USE_DEV_MODE = false;
@@ -46,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [mockUser, setMockUser] = useState<MockUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRealUser, setIsRealUser] = useState<boolean>(false);
+  const userService = useUserService();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -214,6 +216,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await AsyncStorage.setItem('@auth:avatarId', avatarId);
         
         setMockUser(mockUser);
+        
+        // After successful login, sync any stored profile data
+        try {
+          await userService.syncStoredProfileToBackend();
+        } catch (syncError) {
+          console.error('Error syncing profile after login:', syncError);
+          // Non-critical, can continue
+        }
+        
         return mockUser;
       } else {
         // In production mode, sign in anonymously first (only if not already signed in)
@@ -268,6 +279,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // We're reusing the original user's ID for data access
         setIsRealUser(true);
+        
+        // After successful login, sync any stored profile data
+        try {
+          await userService.syncStoredProfileToBackend();
+        } catch (syncError) {
+          console.error('Error syncing profile after login:', syncError);
+          // Non-critical, can continue
+        }
         
         // Return a modified user object with the actual userId
         return {
@@ -376,6 +395,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await AsyncStorage.setItem('@auth:avatarId', avatarId);
         
         setMockUser(mockUser);
+        
+        // After successful registration, sync any stored profile data
+        try {
+          await userService.syncStoredProfileToBackend();
+        } catch (syncError) {
+          console.error('Error syncing profile after registration:', syncError);
+          // Non-critical, can continue
+        }
+        
         return mockUser;
       } else {
         // Make sure we have an anonymous user first
@@ -441,6 +469,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           await AsyncStorage.setItem('@auth:isAuthenticated', 'true');
           await AsyncStorage.setItem('@auth:username', username);
+          
+          // After successful registration, sync any stored profile data
+          try {
+            await userService.syncStoredProfileToBackend();
+          } catch (syncError) {
+            console.error('Error syncing profile after registration:', syncError);
+            // Non-critical, can continue
+          }
           
           return currentUser;
         } catch (error) {

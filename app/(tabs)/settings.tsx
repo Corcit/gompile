@@ -24,6 +24,7 @@ import { UserSettings } from '../../services/api/models/UserProfile';
 import EditProfileModal from '../../components/settings/EditProfileModal';
 import PrivacyPolicyModal from '../../components/settings/PrivacyPolicyModal';
 import { useAuth } from '../../services/api/AuthContext';
+import { getAvatarColor } from '../../constants/AvatarUtils';
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
@@ -211,8 +212,13 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Profil</Text>
           <View style={styles.profileInfo}>
             <Image
-              source={settings?.avatar?.url ? { uri: settings.avatar.url } : require('../../assets/images/avatar-test.png')}
-              style={styles.avatar}
+              source={settings?.avatar?.url ? 
+                { uri: settings.avatar.url } : 
+                require('../../assets/images/avatar-test.png')}
+              style={[
+                styles.avatar,
+                settings?.avatar?.id && { backgroundColor: getAvatarColor(settings.avatar.id) }
+              ]}
               defaultSource={require('../../assets/images/avatar-test.png')}
             />
             <View style={styles.profileText}>
@@ -321,7 +327,7 @@ export default function SettingsScreen() {
             <MaterialIcons
               name="logout"
               size={24}
-              color={Colors.light.error}
+              color={Colors.dark.text}
             />
             <Text style={styles.actionButtonText}>Çıkış Yap</Text>
           </TouchableOpacity>
@@ -333,7 +339,7 @@ export default function SettingsScreen() {
             <MaterialIcons
               name="delete-forever"
               size={24}
-              color={Colors.light.error}
+              color={Colors.dark.text}
             />
             <Text style={styles.actionButtonText}>Tüm Verileri Sıfırla</Text>
           </TouchableOpacity>
@@ -377,9 +383,10 @@ const styles = StyleSheet.create({
     color: Colors.dark.text + '80',
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 12,
     marginHorizontal: 16,
     backgroundColor: Colors.dark.card,
+    paddingBottom: 8,
   },
   sectionTitle: {
     fontSize: 20,
@@ -403,15 +410,18 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     borderWidth: 1,
-    borderColor: Colors.light.error,
+    borderColor: Colors.dark.tint,
+    backgroundColor: Colors.dark.tint + '30',
   },
   resetButton: {
-    backgroundColor: Colors.light.error + '20',
+    backgroundColor: Colors.dark.error + '40',
+    borderWidth: 1,
+    borderColor: Colors.dark.error,
   },
   actionButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.light.error,
+    color: Colors.dark.text,
     marginLeft: 12,
   },
   settingLeft: {
@@ -435,30 +445,33 @@ const styles = StyleSheet.create({
   profileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
+    paddingVertical: 10,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginRight: 20,
     backgroundColor: Colors.dark.background,
   },
   profileText: {
     flex: 1,
+    marginLeft: 5,
   },
   nickname: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '600',
     color: Colors.dark.text,
     marginBottom: 4,
   },
   editButton: {
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 8,
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
     backgroundColor: Colors.dark.card,
+    marginTop: 0,
+    marginBottom: 0,
   },
   editButtonText: {
     fontSize: 16,

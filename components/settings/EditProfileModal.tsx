@@ -16,6 +16,7 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
 import RoundedButton from '../ui/RoundedButton';
 import RoundedCard from '../ui/RoundedCard';
+import { getAvatarColor } from '../../constants/AvatarUtils';
 
 // Interface for Avatar
 interface Avatar {
@@ -121,7 +122,7 @@ export default function EditProfileModal({
 
   const renderAvatar = ({ item }: { item: Avatar }) => {
     const isSelected = selectedAvatar === item.id;
-    const avatarColor = item.colorScheme || Colors.dark.accent;
+    const avatarColor = item.colorScheme || getAvatarColor(item.id);
     
     return (
       <TouchableOpacity
@@ -147,6 +148,13 @@ export default function EditProfileModal({
       </TouchableOpacity>
     );
   };
+
+  // Update to ensure we load with the initial avatar selected
+  useEffect(() => {
+    if (visible && initialAvatarId && avatars.length > 0) {
+      setSelectedAvatar(initialAvatarId);
+    }
+  }, [visible, initialAvatarId, avatars]);
 
   return (
     <Modal

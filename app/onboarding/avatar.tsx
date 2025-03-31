@@ -8,6 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import RoundedButton from '../../components/ui/RoundedButton';
 import RoundedCard from '../../components/ui/RoundedCard';
 import Mascot from '../../components/mascot/Mascot';
+import { useUserService } from '../../services/api/hooks/useUserService';
+import { getAvatarColor } from '../../constants/AvatarUtils';
 
 // Interface for Avatar
 interface Avatar {
@@ -20,6 +22,7 @@ interface Avatar {
 }
 
 export default function AvatarSelectionScreen() {
+  const userService = useUserService();
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,14 +110,23 @@ export default function AvatarSelectionScreen() {
     try {
       setSubmitting(true);
       
-      // Save the selected avatar ID
+      // Save to AsyncStorage first as the most reliable method
       await AsyncStorage.setItem('@user:avatarId', selectedAvatar);
       
-      // In a real app, you might want to update this on the server
-      // For now, we'll just move to the next screen
+      // Try updating profile, with proper error handling built into the service
+      try {
+        // The updated userService will handle the case when apiClient is not available
+        await userService.updateProfile({ avatarId: selectedAvatar });
+      } catch (error) {
+        // Error is already handled and logged in the service
+        // We can continue as we've saved to AsyncStorage
+        console.log('Continuing despite profile update error - will sync later');
+      }
+      
+      // Move to the next screen
       router.push('/onboarding/experience');
     } catch (error) {
-      console.error('Error saving avatar selection:', error);
+      console.error('Error in avatar selection:', error);
       Alert.alert('Error', 'Failed to save your selection. Please try again.');
     } finally {
       setSubmitting(false);
@@ -123,8 +135,7 @@ export default function AvatarSelectionScreen() {
 
   const renderAvatar = ({ item }: { item: Avatar }) => {
     const isSelected = selectedAvatar === item.id;
-    const avatarColor = item.colorScheme || (item.id.includes('fallback') ? 
-      colorFromId(item.id) : Colors.dark.accent);
+    const avatarColor = item.colorScheme || getAvatarColor(item.id);
     
     return (
       <TouchableOpacity
@@ -149,23 +160,6 @@ export default function AvatarSelectionScreen() {
         )}
       </TouchableOpacity>
     );
-  };
-
-  // Helper function to get a color from fallback ID
-  const colorFromId = (id: string): string => {
-    const parts = id.split('-');
-    if (parts.length > 1) {
-      const num = parseInt(parts[1], 10);
-      const colors = [
-        Colors.dark.primary,
-        Colors.dark.secondary,
-        Colors.dark.accent,
-        Colors.dark.info,
-        Colors.dark.success
-      ];
-      return colors[num % colors.length];
-    }
-    return Colors.dark.accent;
   };
 
   return (
