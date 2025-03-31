@@ -155,6 +155,37 @@ npx expo start
 - **Navigation**: Expo Router with tab-based structure
 - **Theming**: Custom hooks and themed components
 
+### Boycott Data Management
+
+#### Data Structure
+The application includes a comprehensive boycott companies database stored in Firebase Firestore. Each company entry contains:
+- Basic information (name, logo, category)
+- Reason for boycott
+- Detailed description (in Turkish)
+- Alternative companies
+- Start date and other metadata
+
+#### Data Import Scripts
+- **`scripts/boycottCompaniesData.js`**: Contains the full dataset and Firebase upload functions
+- **`scripts/upload-boycott-data.js`**: A simple script to execute the data upload
+
+#### Uploading Data to Firebase
+To upload or update the boycott companies data in Firebase:
+
+1. Ensure Firebase credentials are configured properly
+```bash
+# Check if firebase-service-account.json exists in the root directory
+```
+
+2. Run the upload script
+```bash
+npm install firebase-admin  # If not already installed
+node scripts/upload-boycott-data.js
+```
+
+3. Verify data in Firebase console
+The script will upload 28 companies to the 'boycottCompanies' collection, each with complete information about why they are being boycotted and alternative options.
+
 ### Testing
 - Component tests in `components/__tests__/`
 - Jest configuration in `package.json`
