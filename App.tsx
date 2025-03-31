@@ -1,25 +1,40 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { Stack } from 'expo-router';
 import { ApiProvider } from './services/api/ApiContext';
 import { firestore } from './services/firebase';
 import initializeFirestoreData from './services/initFirestore';
 
 export default function App() {
+  const [initError, setInitError] = useState<string | null>(null);
+
   // Initialize Firestore with sample data when the app starts
   useEffect(() => {
     const initializeData = async () => {
       try {
-        console.log('Initializing Firestore with sample data...');
+        console.log('Starting Firestore initialization...');
+        
+        // Check if firestore is properly initialized
+        if (!firestore) {
+          throw new Error('Firestore is not properly initialized');
+        }
+        
+        console.log('Firestore instance exists, proceeding with data initialization...');
         await initializeFirestoreData();
+        console.log('Firestore initialization completed successfully');
       } catch (error) {
-        console.error('Error initializing Firestore:', error);
+        console.error('Error during initialization:', error);
+        setInitError(error instanceof Error ? error.message : 'Unknown initialization error');
       }
     };
 
     initializeData();
   }, []);
+
+  if (initError) {
+    console.log('Initialization error occurred:', initError);
+  }
 
   return (
     <ApiProvider>

@@ -58,7 +58,8 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "tsconfigPaths": true
     },
     "extra": {
       "router": {
@@ -74,6 +75,9 @@
     "updates": {
       "url": "https://u.expo.dev/0ed2b734-777c-4b3a-93f2-195213e654e9"
     },
-    "owner": "coruh"
+    "owner": "coruh",
+    "developmentClient": {
+      "silentLaunch": true
+    }
   }
 }

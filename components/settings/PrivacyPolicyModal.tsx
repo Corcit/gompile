@@ -22,6 +22,79 @@ export default function PrivacyPolicyModal({ visible, onClose }: PrivacyPolicyMo
   const isDark = colorScheme === 'dark';
   const { height } = Dimensions.get('window');
 
+  // Privacy policy content as a single component to ensure it renders
+  const PolicyContent = () => (
+    <>
+      <Text style={styles.importantNote}>
+        Önemli Not: Uygulamamız herhangi bir email, telefon numarası, konum veya kişisel veri toplamamaktadır.
+      </Text>
+
+      <Text style={styles.sectionTitle}>
+        Giriş
+      </Text>
+      <Text style={styles.paragraph}>
+        Bu gizlilik politikası, Gompile uygulamasının kullanıcı verilerini nasıl işlediğini açıklamaktadır. Uygulamamız, tamirat etkinliklerini takip etmenize ve bu etkinlikler hakkında bilgi almanıza yardımcı olmak için tasarlanmıştır.
+      </Text>
+
+      <Text style={styles.sectionTitle}>
+        Toplanan Veriler
+      </Text>
+      <Text style={styles.paragraph}>
+        Uygulamamız, yalnızca sizin gönüllü olarak sağladığınız aşağıdaki bilgileri toplar:
+        {'\n\n'}• Kullanıcı adınız
+        {'\n'}• Tamirat katılım kayıtlarınız
+        {'\n'}• Uygulama tercihleri (örn. bildirim ayarları)
+      </Text>
+
+      <Text style={styles.sectionTitle}>
+        Konum ve Kişisel Veriler
+      </Text>
+      <Text style={styles.paragraph}>
+        Uygulamamız, cihazınızdan herhangi bir konum verisi veya kişisel bilgi toplamamaktadır.
+      </Text>
+
+      <Text style={styles.sectionTitle}>
+        Veri Kullanımı
+      </Text>
+      <Text style={styles.paragraph}>
+        Toplanan veriler yalnızca:
+        {'\n\n'}• Tamirat istatistiklerinizi görüntülemek
+        {'\n'}• Katılım geçmişinizi takip etmek
+        {'\n'}• Uygulama deneyiminizi kişiselleştirmek
+        {'\n\n'}için kullanılmaktadır.
+      </Text>
+
+      <Text style={styles.sectionTitle}>
+        Veri Güvenliği
+      </Text>
+      <Text style={styles.paragraph}>
+        Verileriniz güvenli sunucularda saklanmaktadır ve yalnızca gerekli olduğu durumlarda erişilebilir. Üçüncü taraflarla paylaşılmaz veya satılmaz.
+      </Text>
+
+      <Text style={styles.sectionTitle}>
+        Kullanıcı Hakları
+      </Text>
+      <Text style={styles.paragraph}>
+        Dilediğiniz zaman:
+        {'\n\n'}• Verilerinize erişebilir
+        {'\n'}• Verilerinizi düzeltebilir
+        {'\n'}• Verilerinizi silebilir
+        {'\n'}• Hesabınızı kapatabilirsiniz
+      </Text>
+
+      <Text style={styles.sectionTitle}>
+        İletişim
+      </Text>
+      <Text style={styles.paragraph}>
+        Gizlilik politikamız hakkında sorularınız için support@gompile.com adresinden bizimle iletişime geçebilirsiniz.
+      </Text>
+
+      <Text style={styles.lastUpdate}>
+        Son güncelleme: 19 Mart 2024
+      </Text>
+    </>
+  );
+
   return (
     <Modal
       visible={visible}
@@ -42,79 +115,15 @@ export default function PrivacyPolicyModal({ visible, onClose }: PrivacyPolicyMo
             </TouchableOpacity>
           </View>
           
-          <ScrollView 
-            style={styles.scrollView} 
-            showsVerticalScrollIndicator={true}
-            contentContainerStyle={styles.scrollContent}
-          >
-            <Text style={styles.importantNote}>
-              Önemli Not: Uygulamamız herhangi bir email, telefon numarası, konum veya kişisel veri toplamamaktadır.
-            </Text>
-
-            <Text style={styles.sectionTitle}>
-              Giriş
-            </Text>
-            <Text style={styles.paragraph}>
-              Bu gizlilik politikası, Gompile uygulamasının kullanıcı verilerini nasıl işlediğini açıklamaktadır. Uygulamamız, tamirat etkinliklerini takip etmenize ve bu etkinlikler hakkında bilgi almanıza yardımcı olmak için tasarlanmıştır.
-            </Text>
-
-            <Text style={styles.sectionTitle}>
-              Toplanan Veriler
-            </Text>
-            <Text style={styles.paragraph}>
-              Uygulamamız, yalnızca sizin gönüllü olarak sağladığınız aşağıdaki bilgileri toplar:
-              {'\n\n'}• Kullanıcı adınız
-              {'\n'}• Tamirat katılım kayıtlarınız
-              {'\n'}• Uygulama tercihleri (örn. bildirim ayarları)
-            </Text>
-
-            <Text style={styles.sectionTitle}>
-              Konum ve Kişisel Veriler
-            </Text>
-            <Text style={styles.paragraph}>
-              Uygulamamız, cihazınızdan herhangi bir konum verisi veya kişisel bilgi toplamamaktadır. Tamirat etkinliklerine katılım sırasında konum paylaşımı tamamen isteğe bağlıdır ve bu veriler cihazınızda saklanmaz.
-            </Text>
-
-            <Text style={styles.sectionTitle}>
-              Veri Kullanımı
-            </Text>
-            <Text style={styles.paragraph}>
-              Toplanan veriler yalnızca:
-              {'\n\n'}• Tamirat istatistiklerinizi görüntülemek
-              {'\n'}• Katılım geçmişinizi takip etmek
-              {'\n'}• Uygulama deneyiminizi kişiselleştirmek
-              {'\n\n'}için kullanılmaktadır.
-            </Text>
-
-            <Text style={styles.sectionTitle}>
-              Veri Güvenliği
-            </Text>
-            <Text style={styles.paragraph}>
-              Verileriniz güvenli sunucularda saklanmaktadır ve yalnızca gerekli olduğu durumlarda erişilebilir. Üçüncü taraflarla paylaşılmaz veya satılmaz.
-            </Text>
-
-            <Text style={styles.sectionTitle}>
-              Kullanıcı Hakları
-            </Text>
-            <Text style={styles.paragraph}>
-              Dilediğiniz zaman:
-              {'\n\n'}• Verilerinize erişebilir
-              {'\n'}• Verilerinizi düzeltebilir
-              {'\n'}• Verilerinizi silebilir
-              {'\n'}• Hesabınızı kapatabilirsiniz
-            </Text>
-
-            <Text style={styles.sectionTitle}>
-              İletişim
-            </Text>
-            <Text style={styles.paragraph}>
-              Gizlilik politikamız hakkında sorularınız için support@gompile.com adresinden bizimle iletişime geçebilirsiniz.
-            </Text>
-
-            <Text style={styles.lastUpdate}>
-              Son güncelleme: 19 Mart 2024
-            </Text>
-          </ScrollView>
+          <View style={{flex: 1, backgroundColor: '#1E1E1E'}}>
+            <ScrollView 
+              style={styles.scrollView} 
+              showsVerticalScrollIndicator={true}
+              contentContainerStyle={styles.scrollContent}
+            >
+              <PolicyContent />
+            </ScrollView>
+          </View>
         </View>
       </View>
     </Modal>
@@ -131,6 +140,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '94%',
+    height: '80%',
     backgroundColor: '#1E1E1E',
     borderRadius: 16,
     padding: 20,
@@ -164,9 +174,12 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    marginTop: 10,
   },
   scrollContent: {
     paddingBottom: 30,
+    paddingHorizontal: 5,
+    flexGrow: 1,
   },
   sectionTitle: {
     fontSize: 18,
@@ -178,7 +191,7 @@ const styles = StyleSheet.create({
   paragraph: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#DDDDDD',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   importantNote: {

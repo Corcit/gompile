@@ -20,3 +20,20 @@ firebase.json
 
 expo-env.d.ts
 # @end expo-cli
+
+# Firebase Service Account Keys
+firebase-service-account.json
+*-service-account.json
+
+# Environment variables
+.env
+
+# IDE files
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
