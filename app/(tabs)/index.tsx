@@ -231,7 +231,7 @@ export default function HomeScreen() {
                 activeTab === 'stats' && isDark && styles.darkActiveTabText
               ]}
             >
-              İstatistikler
+              Tamiratlar
             </Text>
           </TouchableOpacity>
           
