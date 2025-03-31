@@ -162,11 +162,17 @@ export default function HomeScreen() {
   const renderCalendarDay = (item: CalendarDay, index: number) => {
     return (
       <View key={index} style={styles.calendarDay}>
-        <Text style={styles.calendarDayText}>{formatDate(item.date)}</Text>
+        <Text style={{fontSize: 12, color: '#fff', marginBottom: 5}}>{formatDate(item.date)}</Text>
         <View style={[
-          styles.calendarDayIndicator, 
-          item.attended ? styles.calendarDayAttended : styles.calendarDayMissed,
-          item.verified && styles.calendarDayVerified
+          {
+            width: 30, 
+            height: 30, 
+            borderRadius: 15, 
+            justifyContent: 'center', 
+            alignItems: 'center'
+          },
+          item.attended ? styles.attendedDay : {backgroundColor: 'rgba(255, 255, 255, 0.1)'},
+          item.verified && styles.verifiedDay
         ]}>
           {item.attended && (
             <MaterialIcons 
@@ -231,7 +237,7 @@ export default function HomeScreen() {
                 activeTab === 'stats' && isDark && styles.darkActiveTabText
               ]}
             >
-              İstatistikler
+              Tamiratlar
             </Text>
           </TouchableOpacity>
           
@@ -252,7 +258,7 @@ export default function HomeScreen() {
                 activeTab === 'calendar' && isDark && styles.darkActiveTabText
               ]}
             >
-              Takvim
+              Araçlar
             </Text>
           </TouchableOpacity>
         </View>
@@ -260,53 +266,210 @@ export default function HomeScreen() {
 
       {/* Content based on active tab */}
       {activeTab === 'stats' ? (
-        <TamiratStats
-          stats={mapStatsForUI(attendanceStats)}
-          isDark={isDark}
-          onSeeAllStats={() => console.log('View all stats')}
-        />
-      ) : (
-        <RoundedCard style={styles.calendarContainer}>
-          <Text style={styles.calendarTitle}>Katılım Geçmişim</Text>
+        <>
+          <TamiratStats
+            stats={mapStatsForUI(attendanceStats)}
+            isDark={isDark}
+            onSeeAllStats={() => console.log('View all stats')}
+          />
           
-          {isLoading ? (
-            <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
-          ) : calendarDays.length > 0 ? (
-            <View style={styles.calendarGrid}>
-              {calendarDays.map((day, index) => renderCalendarDay(day, index))}
-            </View>
-          ) : (
-            <View style={styles.emptyCalendar}>
-              <MaterialIcons name="event-busy" size={50} color="#ccc" />
-              <Text style={styles.emptyCalendarText}>
-                Henüz katılım geçmişi yok
-              </Text>
-              <Text style={styles.emptyCalendarSubtext}>
-                Tamirat etkinliklerine katılarak geçmişinizi oluşturun
-              </Text>
-            </View>
-          )}
-        </RoundedCard>
+          {/* Calendar moved to Tamiratlar tab */}
+          <RoundedCard style={styles.calendarContainer}>
+            <Text style={styles.calendarTitle}>Takvimin</Text>
+            
+            {isLoading ? (
+              <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
+            ) : (
+              <View style={styles.calendarContentContainer}>
+                {/* Month navigation */}
+                <View style={styles.monthNavigation}>
+                  <TouchableOpacity>
+                    <MaterialIcons name="chevron-left" size={32} color="#fff" />
+                  </TouchableOpacity>
+                  <Text style={styles.monthYearText}>March 2025</Text>
+                  <TouchableOpacity>
+                    <MaterialIcons name="chevron-right" size={32} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Days of week */}
+                <View style={styles.daysOfWeekRow}>
+                  <Text style={styles.dayOfWeekText}>P</Text>
+                  <Text style={styles.dayOfWeekText}>S</Text>
+                  <Text style={styles.dayOfWeekText}>Ç</Text>
+                  <Text style={styles.dayOfWeekText}>P</Text>
+                  <Text style={styles.dayOfWeekText}>C</Text>
+                  <Text style={styles.dayOfWeekText}>C</Text>
+                  <Text style={styles.dayOfWeekText}>P</Text>
+                </View>
+                
+                {/* Calendar grid - just showing a static representation for now */}
+                <View style={styles.monthCalendarGrid}>
+                  {/* Week 1 */}
+                  <View style={styles.calendarWeekRow}>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.calendarDay}>
+                      <View style={[styles.dayCircle, styles.attendedDay]}>
+                        <Text style={styles.badgeIndicator}>B</Text>
+                      </View>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>2</Text>
+                    </View>
+                  </View>
+                  
+                  {/* Week 2 */}
+                  <View style={styles.calendarWeekRow}>
+                    <View style={styles.calendarDay}>
+                      <View style={[styles.dayCircle, styles.attendedDay]}>
+                        <Text style={styles.badgeIndicator}>B</Text>
+                      </View>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>4</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>5</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>6</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>7</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>8</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>9</Text>
+                    </View>
+                  </View>
+                  
+                  {/* Week 3 */}
+                  <View style={styles.calendarWeekRow}>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>10</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>11</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>12</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>13</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>14</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>15</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>16</Text>
+                    </View>
+                  </View>
+                  
+                  {/* Week 4 */}
+                  <View style={styles.calendarWeekRow}>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>17</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>18</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>19</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <View style={[styles.dayCircle, styles.attendedDay]}>
+                        <Text style={styles.dayNumber}>20</Text>
+                      </View>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <View style={[styles.dayCircle, styles.attendedDay]}>
+                        <Text style={styles.dayNumber}>21</Text>
+                      </View>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <View style={[styles.dayCircle, styles.attendedDay]}>
+                        <Text style={styles.dayNumber}>22</Text>
+                      </View>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <View style={[styles.dayCircle, styles.verifiedDay]}>
+                        <Text style={styles.dayNumber}>23</Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  {/* Week 5 */}
+                  <View style={styles.calendarWeekRow}>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>24</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>25</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>26</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>27</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>28</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>29</Text>
+                    </View>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>30</Text>
+                    </View>
+                  </View>
+                  
+                  {/* Week 6 (partial) */}
+                  <View style={styles.calendarWeekRow}>
+                    <View style={styles.calendarDay}>
+                      <Text style={styles.dayNumber}>31</Text>
+                    </View>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.emptyDay}></View>
+                    <View style={styles.emptyDay}></View>
+                  </View>
+                </View>
+              </View>
+            )}
+          </RoundedCard>
+        </>
+      ) : (
+        <>
+          {/* Location buttons remain in Araçlar tab */}
+          <View style={styles.homeButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.locationButton, { backgroundColor: Colors.light.error }]}
+              onPress={() => openWebsite('https://halkharita.com')}
+            >
+              <MaterialIcons name="location-on" size={24} color="white" />
+              <Text style={styles.locationButtonText}>Gözaltı Kremi{'\n'}Lokasyonları</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.locationButton, { backgroundColor: Colors.light.tint }]}
+              onPress={() => openWebsite('https://ozgurlukharitasi.com')}
+            >
+              <MaterialIcons name="map" size={24} color="white" />
+              <Text style={styles.locationButtonText}>Tamirat{'\n'}Lokasyonları</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
-
-      {/* Location buttons moved to bottom */}
-      <View style={styles.homeButtonsContainer}>
-        <TouchableOpacity
-          style={[styles.locationButton, { backgroundColor: Colors.light.error }]}
-          onPress={() => openWebsite('https://halkharita.com')}
-        >
-          <MaterialIcons name="location-on" size={24} color="white" />
-          <Text style={styles.locationButtonText}>Gözaltı Kremi{'\n'}Lokasyonları</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.locationButton, { backgroundColor: Colors.light.tint }]}
-          onPress={() => openWebsite('https://ozgurlukharitasi.com')}
-        >
-          <MaterialIcons name="map" size={24} color="white" />
-          <Text style={styles.locationButtonText}>Tamirat{'\n'}Lokasyonları</Text>
-        </TouchableOpacity>
-      </View>
     </ScrollView>
   );
 }
@@ -378,61 +541,90 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   calendarContainer: {
-    padding: 16,
+    padding: 0,
+    overflow: 'hidden',
+    borderRadius: 16,
+  },
+  calendarContentContainer: {
+    backgroundColor: '#2D3355', // Dark navy blue background
+    padding: 20,
   },
   calendarTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 15,
-    color: '#1a1a1a',
+    color: '#fff',
+    padding: 16,
+    backgroundColor: '#2D3355', // Dark navy blue background
   },
-  calendarGrid: {
+  monthNavigation: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 25,
+  },
+  monthYearText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  daysOfWeekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 25,
+  },
+  dayOfWeekText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    width: 40,
+    textAlign: 'center',
+  },
+  monthCalendarGrid: {
+    flexDirection: 'column',
     justifyContent: 'space-between',
   },
+  calendarWeekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  emptyDay: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Slightly visible light background
+  },
   calendarDay: {
-    width: '20%', // 5 days per row
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  calendarDayText: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 5,
-  },
-  calendarDayIndicator: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#eee',
   },
-  calendarDayAttended: {
+  dayCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  attendedDay: {
     backgroundColor: '#4CAF50', // Green
   },
-  calendarDayMissed: {
-    backgroundColor: '#E0E0E0', // Gray
+  verifiedDay: {
+    backgroundColor: '#F5BD42', // Yellow/orange
   },
-  calendarDayVerified: {
-    backgroundColor: '#F5BD42', // Yellow (matching the app's theme)
-  },
-  emptyCalendar: {
-    alignItems: 'center',
-    padding: 30,
-  },
-  emptyCalendarText: {
+  dayNumber: {
     fontSize: 16,
-    fontWeight: '600',
-    marginTop: 15,
-    color: '#666',
-  },
-  emptyCalendarSubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 5,
+    fontWeight: '500',
+    color: '#fff',
     textAlign: 'center',
+  },
+  badgeIndicator: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   homeButtonsContainer: {
     flexDirection: 'row',
